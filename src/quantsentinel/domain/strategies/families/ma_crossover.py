@@ -1,0 +1,1 @@
+"""MA crossover strategy"""
