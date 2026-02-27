@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+.env
+.env.*
+
+# Pytest
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Ruff
+.ruff_cache/
+
+# mypy
+.mypy_cache/
+
+# Alembic
+*.db
+*.sqlite
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Logs
+*.log
+logs/
+
+# Docker
+*.tar
+
+# VS Code
+.vscode/
+
+# Mac
+.DS_Store
+
+# Node (if ever used for UI extensions)
+node_modules/
+
+# Babel compiled files
+*.mo
+
+# Artifacts
+artifacts/
+snapshots/
+
+# Postgres local volume
+pgdata/
+
+# Redis dump
+dump.rdb
