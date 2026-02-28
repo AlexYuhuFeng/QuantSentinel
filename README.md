@@ -478,3 +478,11 @@ UI 必须显示最近任务。
 ## License
 
 Proprietary / Internal Use (可按团队实际要求替换)。
+
+Alembic migrations for QuantSentinel.
+
+Generate a revision:
+  alembic revision --autogenerate -m "init"
+
+Apply migrations:
+  alembic upgrade head

@@ -12,8 +12,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# System deps (psycopg + build tools)
+# System deps (psycopg + TLS)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     curl \
     build-essential \
     libpq-dev \
@@ -23,18 +24,46 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -sSL https://install.python-poetry.org | python - \
   && ln -s /root/.local/bin/poetry /usr/local/bin/poetry
 
-# Install dependencies first for better layer caching
-COPY pyproject.toml poetry.lock* /app/
-RUN poetry install --only main --no-root
+# Create non-root user (production best practice)
+RUN useradd -m -u 10001 appuser \
+  && chown -R appuser:appuser /app
 
-# Copy source
+# -----------------------------
+# Dependency layer
+# -----------------------------
+FROM base AS deps
+
+COPY pyproject.toml poetry.lock* /app/
+RUN poetry install --only main --no-ansi
+
+# -----------------------------
+# Runtime image
+# -----------------------------
+FROM base AS runtime
+
+# Copy installed site-packages from deps
+COPY --from=deps /usr/local /usr/local
+
+# Copy app code
 COPY src/ /app/src/
 COPY locales/ /app/locales/
 COPY alembic.ini /app/alembic.ini
-COPY src/quantsentinel/infra/db/migrations /app/src/quantsentinel/infra/db/migrations
 
-# Install the project (editable not needed in container; regular install is fine)
-RUN poetry install --only main
+# Ensure ownership
+RUN chown -R appuser:appuser /app
+USER appuser
 
-# Default command (compose will override per service)
-CMD ["bash", "-lc", "streamlit run src/quantsentinel/app/main.py --server.port=8501 --server.address=0.0.0.0"]
+# Default command (docker-compose overrides per service)
+CMD ["bash", "-lc", "streamlit run src/quantsentinel/app/main.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true --browser.gatherUsageStats=false"]
+
+# -----------------------------
+# Dev image (optional target)
+# -----------------------------
+FROM runtime AS dev
+
+USER root
+COPY pyproject.toml poetry.lock* /app/
+# Install dev deps for lint/test in container
+RUN poetry install --with dev --no-ansi
+RUN chown -R appuser:appuser /app
+USER appuser

@@ -50,11 +50,16 @@ pre-commit = "^4.0.1"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --disable-warnings --maxfail=1"
+# Useful defaults for deterministic tests
+filterwarnings = [
+  "error::DeprecationWarning:quantsentinel.*",
+  "ignore::DeprecationWarning:.*",
+]
 
 [tool.coverage.run]
-source = ["quantsentinel"]
 branch = true
 parallel = true
+source_pkgs = ["quantsentinel"]
 
 [tool.coverage.report]
 show_missing = true
@@ -64,16 +69,34 @@ exclude_lines = [
   "pragma: no cover",
   "if __name__ == .__main__.:",
   "raise NotImplementedError",
+  "if TYPE_CHECKING:",
 ]
 
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-extend-exclude = ["alembic/versions"]
+src = ["src"]
+extend-exclude = [
+  ".venv",
+  "src/quantsentinel/infra/db/migrations/versions",
+]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "SIM"]
-ignore = ["E501"]  # line length handled by formatter
+# Keep a strong, still-manageable rule set
+select = [
+  "E", "F", "I",        # basic
+  "B",                  # bugbear
+  "UP",                 # pyupgrade
+  "SIM",                # simplifications
+  "RUF",                # ruff-specific
+  "C4",                 # comprehensions
+  "TCH",                # type-checking imports
+  "ARG",                # unused arguments
+]
+ignore = [
+  "E501",  # handled by formatter
+  "ARG002", # allow unused args in callbacks/overrides (tighten later if you want)
+]
 
 [tool.ruff.format]
 quote-style = "double"
