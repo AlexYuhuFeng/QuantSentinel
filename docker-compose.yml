@@ -12,20 +12,18 @@ services:
     ports:
       - "8501:8501"
     environment:
-      # App
       QS_ENV: "dev"
       QS_LOG_LEVEL: "INFO"
 
-      # Database
       DATABASE_URL: "postgresql+psycopg://quantsentinel:quantsentinel@db:5432/quantsentinel"
 
-      # Redis / Celery
       REDIS_URL: "redis://redis:6379/0"
       CELERY_BROKER_URL: "redis://redis:6379/0"
       CELERY_RESULT_BACKEND: "redis://redis:6379/1"
 
-      # i18n
       QS_DEFAULT_LOCALE: "en"
+      QS_DEFAULT_ADMIN_USER: "admin"
+      QS_DEFAULT_ADMIN_PASSWORD: "Admin123!"
     volumes:
       - .:/app
     depends_on:
