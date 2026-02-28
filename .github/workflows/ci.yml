@@ -1,13 +1,37 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      - run: pip install poetry
-      - run: poetry install
-      - run: poetry run pytest
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry==1.8.3
+
+      - name: Install dependencies
+        run: |
+          poetry --version
+          poetry install --with dev
+
+      - name: Lint (ruff)
+        run: |
+          poetry run ruff check .
+
+      - name: Tests (pytest + coverage)
+        run: |
+          poetry run pytest -q --cov=src/quantsentinel --cov-report=term-missing
