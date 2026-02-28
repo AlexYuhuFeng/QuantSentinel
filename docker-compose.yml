@@ -1,7 +1,99 @@
-version: '3.9'
+version: "3.9"
+
 services:
-  app:
+  web:
     build: .
-    command: python -m quantsentinel.app.main
+    container_name: quantsentinel-web
+    command: >
+      streamlit run src/quantsentinel/app/main.py
+      --server.address=0.0.0.0
+      --server.port=8501
+      --server.headless=true
+    ports:
+      - "8501:8501"
+    environment:
+      # App
+      QS_ENV: "dev"
+      QS_LOG_LEVEL: "INFO"
+
+      # Database
+      DATABASE_URL: "postgresql+psycopg://quantsentinel:quantsentinel@db:5432/quantsentinel"
+
+      # Redis / Celery
+      REDIS_URL: "redis://redis:6379/0"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
+
+      # i18n
+      QS_DEFAULT_LOCALE: "en"
     volumes:
       - .:/app
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  worker:
+    build: .
+    container_name: quantsentinel-worker
+    command: celery -A quantsentinel.infra.tasks.celery_app worker -l INFO
+    environment:
+      QS_ENV: "dev"
+      DATABASE_URL: "postgresql+psycopg://quantsentinel:quantsentinel@db:5432/quantsentinel"
+      REDIS_URL: "redis://redis:6379/0"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  beat:
+    build: .
+    container_name: quantsentinel-beat
+    command: celery -A quantsentinel.infra.tasks.celery_app beat -l INFO
+    environment:
+      QS_ENV: "dev"
+      DATABASE_URL: "postgresql+psycopg://quantsentinel:quantsentinel@db:5432/quantsentinel"
+      REDIS_URL: "redis://redis:6379/0"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: quantsentinel-db
+    environment:
+      POSTGRES_USER: quantsentinel
+      POSTGRES_PASSWORD: quantsentinel
+      POSTGRES_DB: quantsentinel
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quantsentinel -d quantsentinel"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: quantsentinel-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:

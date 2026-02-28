@@ -1,59 +1,125 @@
+############################
 # Python
+############################
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 *.so
+*.egg-info/
+*.egg
+build/
+dist/
 
+############################
 # Virtual environments
+############################
 .venv/
 venv/
 .env
 .env.*
+.envrc
 
+############################
+# Poetry
+############################
+poetry.lock
+
+############################
 # Pytest / coverage
+############################
 .pytest_cache/
 .coverage
+.coverage.*
 coverage.xml
 htmlcov/
+pytestdebug.log
 
-# Ruff
+############################
+# Ruff / mypy / type checkers
+############################
 .ruff_cache/
-
-# mypy
 .mypy_cache/
+.dmypy.json
+.pyre/
 
-# Local databases
+############################
+# Alembic
+############################
+alembic.ini.bak
+
+############################
+# Local databases (dev only)
+############################
 *.db
 *.sqlite
+*.sqlite3
 
+############################
 # Celery
+############################
 celerybeat-schedule
 celerybeat.pid
+*.pid
 
+############################
 # Logs
+############################
 *.log
 logs/
 
+############################
 # Docker
+############################
 *.tar
+docker-compose.override.yml
 
+############################
 # VS Code
+############################
 .vscode/
 
-# macOS
+############################
+# macOS / OS files
+############################
 .DS_Store
+Thumbs.db
 
-# Node (if used for UI extensions)
+############################
+# Node (if ever used)
+############################
 node_modules/
+npm-debug.log*
+yarn-error.log*
 
-# Babel compiled files
+############################
+# Babel / i18n
+############################
 *.mo
 
-# Artifacts
+############################
+# Runtime artifacts
+############################
 artifacts/
 snapshots/
+tmp/
+.cache/
 
+############################
 # Local service data
+############################
 pgdata/
+redis-data/
 dump.rdb
+
+############################
+# Streamlit
+############################
+.streamlit/secrets.toml
+.streamlit/config.toml
+
+############################
+# Test outputs
+############################
+*.out
+*.prof
