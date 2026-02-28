@@ -1,31 +1,30 @@
 """
-QuantSentinel Streamlit entrypoint.
+QuantSentinel Streamlit entrypoint (UI scaffold).
 
-Supports two execution modes:
-1) Preferred: `streamlit run src/quantsentinel/app/main.py`
-2) Compatibility: `python -m quantsentinel.app.main` (spawns Streamlit)
+Clean rule:
+- This file is executed ONLY by Streamlit:
+  `streamlit run src/quantsentinel/app/main.py`
 
-This file intentionally has **zero** imports from quantsentinel services/infra/domain
-so it can run even before those layers are implemented.
+Design rule:
+- Do NOT import unfinished services/infra/domain here yet.
+- Keep this as a stable UI shell so docker-compose can boot from day 1.
 """
 
 from __future__ import annotations
 
 import os
 import socket
-import subprocess
-import sys
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 from urllib.parse import urlparse
 
 import streamlit as st
 
 
-# -----------------------------
-# Minimal i18n (bootstrap only)
-# Replace later with gettext-based quantsentinel.i18n module.
-# -----------------------------
+# -----------------------------------------------------------------------------
+# Bootstrap i18n (temporary)
+# Replace later with gettext-based quantsentinel.i18n implementation.
+# -----------------------------------------------------------------------------
 I18N: Dict[str, Dict[str, str]] = {
     "en": {
         "app_name": "QuantSentinel",
@@ -52,7 +51,7 @@ I18N: Dict[str, Dict[str, str]] = {
         "command_palette": "Command Palette",
         "run_command": "Run",
         "shortcuts": "Shortcuts",
-        "shortcuts_hint": "Keyboard shortcuts need a custom Streamlit component. This is a UI placeholder.",
+        "shortcuts_hint": "Keyboard shortcuts require a custom Streamlit component. Placeholder only.",
         "layout": "Layout",
         "save_layout": "Save layout",
         "load_layout": "Load layout",
@@ -61,7 +60,7 @@ I18N: Dict[str, Dict[str, str]] = {
         "not_implemented": "Not implemented yet (scaffold).",
         "role": "Role",
         "language": "Language",
-        "default_admin_note": "Default admin (bootstrap): admin / Admin123!",
+        "default_admin_note": "Default admin (bootstrap): admin / Admin123! (override via env)",
     },
     "zh_CN": {
         "app_name": "QuantSentinel",
@@ -97,7 +96,7 @@ I18N: Dict[str, Dict[str, str]] = {
         "not_implemented": "尚未实现（脚手架阶段）。",
         "role": "角色",
         "language": "语言",
-        "default_admin_note": "默认管理员（启动阶段）：admin / Admin123!",
+        "default_admin_note": "默认管理员（启动阶段）：admin / Admin123!（可通过环境变量覆盖）",
     },
 }
 
@@ -107,10 +106,10 @@ def t(key: str) -> str:
     return I18N.get(lang, I18N["en"]).get(key, key)
 
 
-# -----------------------------
-# Minimal auth (bootstrap only)
-# Replace later with DB-backed auth + Argon2 + RBAC.
-# -----------------------------
+# -----------------------------------------------------------------------------
+# Bootstrap auth (temporary)
+# Replace later with DB-backed users + Argon2 + RBAC.
+# -----------------------------------------------------------------------------
 @dataclass(frozen=True)
 class User:
     username: str
@@ -118,7 +117,6 @@ class User:
 
 
 def _bootstrap_admin_creds() -> tuple[str, str]:
-    # Keep consistent with README; overridable via env.
     u = os.getenv("QS_DEFAULT_ADMIN_USER", "admin")
     p = os.getenv("QS_DEFAULT_ADMIN_PASSWORD", "Admin123!")
     return u, p
@@ -131,20 +129,10 @@ def check_login(username: str, password: str) -> Optional[User]:
     return None
 
 
-def require_login() -> None:
-    if st.session_state.get("user") is None:
-        st.stop()
-
-
-# -----------------------------
-# Connectivity status (no external deps)
-# -----------------------------
+# -----------------------------------------------------------------------------
+# Lightweight connectivity checks (TCP only)
+# -----------------------------------------------------------------------------
 def _tcp_health(url: str) -> str:
-    """
-    Very lightweight health check:
-    - Parses host/port from URL and attempts a TCP connection.
-    - Returns "OK" / "DOWN" / "UNKNOWN"
-    """
     if not url:
         return t("unknown")
     try:
@@ -159,19 +147,15 @@ def _tcp_health(url: str) -> str:
         return t("down")
 
 
-# -----------------------------
-# UI primitives
-# -----------------------------
+# -----------------------------------------------------------------------------
+# UI shell
+# -----------------------------------------------------------------------------
 def header_bar(workspace: str) -> None:
     left, mid, right = st.columns([1.3, 3.2, 1.5], vertical_alignment="center")
 
     with left:
         st.markdown(
-            f"""
-            <div style="font-size:20px;font-weight:700;line-height:1.2;">
-              {t("app_name")}
-            </div>
-            """,
+            f"<div style='font-size:20px;font-weight:700;'>{t('app_name')}</div>",
             unsafe_allow_html=True,
         )
 
@@ -208,35 +192,35 @@ def header_bar(workspace: str) -> None:
         with c2:
             st.caption(f"{t('role')}: **{role}**")
         with c3:
-            if user:
-                if st.button(t("sign_out"), use_container_width=True):
-                    st.session_state["user"] = None
-                    st.rerun()
+            if user and st.button(t("sign_out"), use_container_width=True):
+                st.session_state["user"] = None
+                st.rerun()
 
 
 def sidebar_nav() -> str:
     with st.sidebar:
         st.caption(t("system_status"))
+
         db_url = os.getenv("DATABASE_URL", "")
         redis_url = os.getenv("REDIS_URL", os.getenv("CELERY_BROKER_URL", ""))
-        st.write(f"**{t('db')}**: { _tcp_health(db_url) }")
-        st.write(f"**{t('redis')}**: { _tcp_health(redis_url) }")
+
+        st.write(f"**{t('db')}**: {_tcp_health(db_url)}")
+        st.write(f"**{t('redis')}**: {_tcp_health(redis_url)}")
         st.divider()
 
-        # Nav (<=6)
         user: Optional[User] = st.session_state.get("user")
         role = user.role if user else "Viewer"
 
         items = [t("market"), t("explore"), t("monitor"), t("research"), t("strategy"), t("help")]
         if role == "Admin":
-            items.insert(5, t("admin"))  # keep <=6 by folding admin/help later if needed
+            # If you prefer strict <=6, merge Admin into Help later.
+            items.insert(5, t("admin"))
 
         choice = st.radio(t("workspace"), items, key="nav", label_visibility="collapsed")
         return choice
 
 
 def login_screen() -> None:
-    st.set_page_config(page_title="QuantSentinel", layout="wide")
     st.markdown(f"## {t('login')}")
     st.info(t("default_admin_note"))
 
@@ -254,52 +238,45 @@ def login_screen() -> None:
         st.rerun()
 
 
-# -----------------------------
-# Workspaces (scaffold)
-# -----------------------------
-def page_market() -> None:
-    st.subheader(t("market"))
+# -----------------------------------------------------------------------------
+# Workspace placeholders (real content will be wired to services later)
+# -----------------------------------------------------------------------------
+def _placeholder(title_key: str, next_hint: str) -> None:
+    st.subheader(t(title_key))
     st.write(t("not_implemented"))
-    st.caption("Next: watchlist table + anomalies panel + drawer details.")
+    st.caption(next_hint)
+
+
+def page_market() -> None:
+    _placeholder("market", "Next: watchlist table + anomalies panel + right-side drawer.")
 
 
 def page_explore() -> None:
-    st.subheader(t("explore"))
-    st.write(t("not_implemented"))
-    st.caption("Next: multi-panel Plotly charts + QC + derived + snapshot export.")
+    _placeholder("explore", "Next: multi-panel Plotly chart + QC + derived + snapshot export.")
 
 
 def page_monitor() -> None:
-    st.subheader(t("monitor"))
-    st.write(t("not_implemented"))
-    st.caption("Next: rule wizard + governance (dedup/silence/aggregate) + events timeline.")
+    _placeholder("monitor", "Next: rule wizard + governance (dedup/silence/aggregate) + events view.")
 
 
 def page_research() -> None:
-    st.subheader(t("research"))
-    st.write(t("not_implemented"))
-    st.caption("Next: projectized runs + walk-forward + metrics + artifacts.")
+    _placeholder("research", "Next: projects + runs compare + walk-forward + artifacts.")
 
 
 def page_strategy() -> None:
-    st.subheader(t("strategy"))
-    st.write(t("not_implemented"))
-    st.caption("Next: strategy plugins + grid/random/bayes search + leaderboard + drawer.")
+    _placeholder("strategy", "Next: strategy plugins + search (grid/random/bayes) + leaderboard + drawer.")
 
 
 def page_admin() -> None:
-    st.subheader(t("admin"))
-    st.write(t("not_implemented"))
-    st.caption("Next: users/RBAC + audit log viewer + system settings.")
+    _placeholder("admin", "Next: users/RBAC + audit log viewer + system settings.")
 
 
 def page_help() -> None:
     st.subheader(t("help"))
     st.markdown(
         f"""
-- **{t("command_palette")}**: UI placeholder only (real Ctrl/⌘+K needs custom component).
-- **{t("shortcuts")}**: UI placeholder (see below).
-- This app is currently a scaffold that runs reliably while services/infra/domain are implemented.
+- **{t("command_palette")}** and **{t("layout")}** are UI stubs for now.
+- This file is intentionally isolated from unfinished layers to keep the app bootable.
         """
     )
     with st.expander(t("shortcuts"), expanded=True):
@@ -316,8 +293,7 @@ def page_help() -> None:
 
 
 def command_palette_ui() -> None:
-    # Streamlit has no native keyboard shortcut handling; this is a functional UI placeholder
-    # that will be replaced with a component later.
+    # Real Ctrl/⌘+K requires a Streamlit component; this is an interactive placeholder.
     with st.popover(t("command_palette")):
         cmd = st.text_input("Search command", placeholder="Open ticker / Refresh / Export snapshot ...")
         if st.button(t("run_command"), use_container_width=True):
@@ -325,7 +301,7 @@ def command_palette_ui() -> None:
 
 
 def layout_presets_ui() -> None:
-    # Bootstrap placeholder; replace with DB-backed ui_layout_presets later.
+    # Real DB-backed presets will live in ui_layout_presets; this is a placeholder.
     with st.popover(t("layout")):
         name = st.text_input(t("preset_name"), value="default")
         c1, c2 = st.columns(2)
@@ -349,9 +325,6 @@ def layout_presets_ui() -> None:
                 st.info(t("saved"))
 
 
-# -----------------------------
-# Main app
-# -----------------------------
 def run_streamlit_app() -> None:
     st.set_page_config(page_title="QuantSentinel", layout="wide")
 
@@ -368,9 +341,9 @@ def run_streamlit_app() -> None:
     nav = sidebar_nav()
     header_bar(workspace=nav)
 
-    # top-right utilities (inside main area)
-    tool_left, tool_right = st.columns([4, 1], vertical_alignment="center")
-    with tool_right:
+    # main-area utility buttons
+    right_util = st.columns([4, 1])[1]
+    with right_util:
         c1, c2 = st.columns(2)
         with c1:
             command_palette_ui()
@@ -379,7 +352,7 @@ def run_streamlit_app() -> None:
 
     st.divider()
 
-    # render page
+    # routing
     if nav == t("market"):
         page_market()
     elif nav == t("explore"):
@@ -396,35 +369,5 @@ def run_streamlit_app() -> None:
         page_help()
 
 
-def _spawn_streamlit() -> None:
-    """
-    When executed as `python -m quantsentinel.app.main`, spawn streamlit.
-    This keeps compatibility with a compose command that doesn't call streamlit directly.
-    """
-    # Avoid infinite respawn: Streamlit sets env var on re-run; also detect if we are already in streamlit.
-    if os.getenv("QS_SPAWNED_STREAMLIT") == "1":
-        return
-
-    env = os.environ.copy()
-    env["QS_SPAWNED_STREAMLIT"] = "1"
-
-    cmd = [
-        sys.executable,
-        "-m",
-        "streamlit",
-        "run",
-        "src/quantsentinel/app/main.py",
-        "--server.address=0.0.0.0",
-        "--server.port=8501",
-        "--server.headless=true",
-    ]
-    raise SystemExit(subprocess.call(cmd, env=env))
-
-
-# Streamlit executes the script top-to-bottom.
-# If someone runs `python -m ...`, we spawn streamlit and exit.
 if __name__ == "__main__":
-    _spawn_streamlit()
-else:
-    # Normal Streamlit path
     run_streamlit_app()
