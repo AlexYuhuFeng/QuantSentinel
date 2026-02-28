@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-import os
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+
+from quantsentinel.common.config import get_settings
+from quantsentinel.infra.db.models import Base
 
 # Alembic Config object
 config = context.config
@@ -13,19 +15,12 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# ---- DB URL from env (do NOT hardcode in alembic.ini) ----
-DB_URL = os.getenv("DATABASE_URL")
-if not DB_URL:
-    raise RuntimeError("DATABASE_URL is not set. Example: postgresql+psycopg://user:pass@db:5432/quantsentinel")
-
-config.set_main_option("sqlalchemy.url", DB_URL)
+# ---- DB URL from Settings (single source of truth) ----
+settings = get_settings()
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 # ---- Target metadata ----
-try:
-    from quantsentinel.infra.db.models import Base  # type: ignore
-    target_metadata = Base.metadata
-except Exception:  # pragma: no cover
-    target_metadata = None
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
@@ -36,6 +31,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
+        compare_server_default=True,
     )
 
     with context.begin_transaction():
