@@ -1,77 +1,11 @@
-version: "3.9"
-
 services:
-  web:
-    build: .
-    container_name: quantsentinel-web
-    command: >
-      streamlit run src/quantsentinel/app/main.py
-      --server.address=0.0.0.0
-      --server.port=8501
-      --server.headless=true
-    ports:
-      - "8501:8501"
-    environment:
-      QS_ENV: "dev"
-      QS_LOG_LEVEL: "INFO"
-
-      DATABASE_URL: "postgresql+psycopg://quantsentinel:quantsentinel@db:5432/quantsentinel"
-
-      REDIS_URL: "redis://redis:6379/0"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
-
-      QS_DEFAULT_LOCALE: "en"
-      QS_DEFAULT_ADMIN_USER: "admin"
-      QS_DEFAULT_ADMIN_PASSWORD: "Admin123!"
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-
-  worker:
-    build: .
-    container_name: quantsentinel-worker
-    command: celery -A quantsentinel.infra.tasks.celery_app worker -l INFO
-    environment:
-      QS_ENV: "dev"
-      DATABASE_URL: "postgresql+psycopg://quantsentinel:quantsentinel@db:5432/quantsentinel"
-      REDIS_URL: "redis://redis:6379/0"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-
-  beat:
-    build: .
-    container_name: quantsentinel-beat
-    command: celery -A quantsentinel.infra.tasks.celery_app beat -l INFO
-    environment:
-      QS_ENV: "dev"
-      DATABASE_URL: "postgresql+psycopg://quantsentinel:quantsentinel@db:5432/quantsentinel"
-      REDIS_URL: "redis://redis:6379/0"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-
   db:
-    image: postgres:16
-    container_name: quantsentinel-db
+    image: postgres:16-alpine
+    container_name: quantsentinel_db
     environment:
+      POSTGRES_DB: quantsentinel
       POSTGRES_USER: quantsentinel
       POSTGRES_PASSWORD: quantsentinel
-      POSTGRES_DB: quantsentinel
     ports:
       - "5432:5432"
     volumes:
@@ -79,19 +13,88 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U quantsentinel -d quantsentinel"]
       interval: 5s
-      timeout: 5s
+      timeout: 3s
       retries: 20
-    restart: unless-stopped
 
   redis:
-    image: redis:7
-    container_name: quantsentinel-redis
+    image: redis:7-alpine
+    container_name: quantsentinel_redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quantsentinel_web
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
     volumes:
-      - redisdata:/data
-    restart: unless-stopped
+      # Optional: persist artifacts/snapshots outside container
+      - artifacts:/app/artifacts
+    command: >
+      bash -lc "
+      alembic upgrade head &&
+      streamlit run src/quantsentinel/app/main.py
+        --server.port=8501
+        --server.address=0.0.0.0
+      "
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quantsentinel_worker
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - artifacts:/app/artifacts
+    command: >
+      bash -lc "
+      alembic upgrade head &&
+      celery -A quantsentinel.infra.tasks.celery_app:celery_app worker
+        --loglevel=INFO
+        --concurrency=2
+      "
+
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quantsentinel_beat
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - artifacts:/app/artifacts
+    command: >
+      bash -lc "
+      alembic upgrade head &&
+      celery -A quantsentinel.infra.tasks.celery_app:celery_app beat
+        --loglevel=INFO
+      "
 
 volumes:
   pgdata:
-  redisdata:
+  artifacts:
