@@ -11,7 +11,7 @@ venv/
 .env
 .env.*
 
-# Pytest
+# Pytest / coverage
 .pytest_cache/
 .coverage
 coverage.xml
@@ -23,7 +23,7 @@ htmlcov/
 # mypy
 .mypy_cache/
 
-# Alembic
+# Local databases
 *.db
 *.sqlite
 
@@ -41,10 +41,10 @@ logs/
 # VS Code
 .vscode/
 
-# Mac
+# macOS
 .DS_Store
 
-# Node (if ever used for UI extensions)
+# Node (if used for UI extensions)
 node_modules/
 
 # Babel compiled files
@@ -54,8 +54,6 @@ node_modules/
 artifacts/
 snapshots/
 
-# Postgres local volume
+# Local service data
 pgdata/
-
-# Redis dump
 dump.rdb
