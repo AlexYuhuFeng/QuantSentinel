@@ -3,14 +3,28 @@ from __future__ import annotations
 import streamlit as st
 import streamlit.components.v1 as components
 
+from quantsentinel.app.ui.command_palette import CommandPalette, PaletteCommand
+from quantsentinel.app.ui.components import render_shortcuts_help_dialog
 from quantsentinel.app.ui.notifications import render_notifications_control
-from quantsentinel.app.ui.state import auth, clear_auth, ctx, set_authenticated, set_language, set_workspace
+from quantsentinel.app.ui.shortcuts import dispatch_shortcut_events, mount_shortcut_listener, register_shortcuts
+from quantsentinel.app.ui.state import (
+    auth,
+    clear_auth,
+    ctx,
+    open_drawer,
+    push_toast,
+    set_authenticated,
+    set_language,
+    set_workspace,
+    ui,
+)
 from quantsentinel.common.config import get_settings
 from quantsentinel.infra.db.engine import db_healthcheck
-from quantsentinel.infra.db.models import UserRole
+from quantsentinel.infra.db.models import LayoutWorkspace, UserRole
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.audit_service import AuditService
 from quantsentinel.services.auth_service import AuthService
+from quantsentinel.services.layout_service import LayoutService
 
 from quantsentinel.app.pages import (
     admin,

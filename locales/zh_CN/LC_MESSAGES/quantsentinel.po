@@ -501,3 +501,18 @@ msgstr "告警规则"
 
 msgid "Recent Alert Events"
 msgstr "近期告警事件"
+
+msgid "Keyboard shortcuts"
+msgstr "快捷键"
+
+msgid "Shortcut"
+msgstr "快捷键"
+
+msgid "Action"
+msgstr "操作"
+
+msgid "No shortcuts registered."
+msgstr "尚未注册快捷键。"
+
+msgid "No matching commands."
+msgstr "没有匹配的命令。"

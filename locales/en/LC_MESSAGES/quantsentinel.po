@@ -255,3 +255,18 @@ msgstr "Page"
 
 msgid "QuantSentinel"
 msgstr "QuantSentinel"
+
+msgid "Keyboard shortcuts"
+msgstr "Keyboard shortcuts"
+
+msgid "Shortcut"
+msgstr "Shortcut"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "No shortcuts registered."
+msgstr "No shortcuts registered."
+
+msgid "No matching commands."
+msgstr "No matching commands."
