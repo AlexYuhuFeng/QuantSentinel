@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from quantsentinel.app.ui.notifications import render_notifications_control
 from quantsentinel.app.ui.state import auth, clear_auth, ctx, set_authenticated, set_language, set_workspace
@@ -199,9 +200,36 @@ def main() -> None:
         render_login()
         return
 
+    register_shortcuts()
+    mount_shortcut_listener()
+    dispatch_shortcut_events()
+
     render_header()
     page_key = render_sidebar()
     render_page(page_key)
+    render_shortcuts_help_dialog()
+
+
+def _consume_ticker_focus_request() -> None:
+    if not st.session_state.get("qs_ui"):
+        return
+
+    app_ui = st.session_state["qs_ui"]
+    if not app_ui.ticker_focus_requested:
+        return
+
+    components.html(
+        """
+        <script>
+        const root = window.parent.document;
+        const input = root.querySelector('input[aria-label="Ticker"]');
+        if (input) input.focus();
+        </script>
+        """,
+        height=0,
+    )
+    app_ui.ticker_focus_requested = False
+    st.session_state["qs_ui"] = app_ui
 
 
 if __name__ == "__main__":

@@ -50,6 +50,12 @@ class UIState:
 
     # Shortcut help modal
     shortcuts_help_open: bool = False
+    shortcuts_registry: dict[str, str] | None = None
+    shortcut_events: list[str] | None = None
+    last_shortcut_event: str | None = None
+
+    # Ticker search focus
+    ticker_focus_requested: bool = False
 
     # Drawer (right panel)
     drawer_open: bool = False
