@@ -17,7 +17,6 @@ import streamlit as st
 
 from quantsentinel.infra.db.models import UserRole
 
-
 # -----------------------------
 # Session keys (DO NOT CHANGE casually)
 # -----------------------------

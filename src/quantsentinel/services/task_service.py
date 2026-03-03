@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from quantsentinel.infra.db.engine import session_scope
-from quantsentinel.infra.db.models import Task, TaskStatus
+from quantsentinel.infra.db.models import TaskStatus
 from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
 from quantsentinel.infra.db.repos.tasks_repo import TasksRepo
 

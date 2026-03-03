@@ -19,7 +19,6 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Literal
 
 from quantsentinel.common.security import hash_password, verify_password
 from quantsentinel.infra.db.engine import session_scope

@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import and_, select, update
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from quantsentinel.infra.db.models import AlertEvent, AlertEventStatus
