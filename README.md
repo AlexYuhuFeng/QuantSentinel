@@ -100,6 +100,7 @@ QuantSentinel 面向以下用户角色：
 - 用户 profile 存储 `default_language`
 - 支持右上角即时切换语言
 - 提供 `locales/` 与 `.po/.mo` 文件
+- 本地/CI 可运行 `python scripts/check_missing_translations.py locales/zh_CN/LC_MESSAGES/quantsentinel.po` 巡检缺失翻译
 
 ### 4.3 新增语言流程
 
