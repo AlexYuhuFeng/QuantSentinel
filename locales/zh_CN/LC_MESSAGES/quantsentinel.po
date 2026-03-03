@@ -244,14 +244,46 @@ msgstr "Percent Change"
 
 msgid "Last Close"
 msgstr "Last Close"
+# --- App i18n regression coverage ---
 
-msgid "Command palette..."
-msgstr "命令面板..."
+msgid "Username or email"
+msgstr "用户名或邮箱"
 
+msgid "Sign in"
+msgstr "登录"
 
-msgid "Page"
-msgstr "页码"
+msgid "Bootstrap admin"
+msgstr "初始化管理员"
 
+msgid "Terminal context"
+msgstr "终端上下文"
 
-msgid "QuantSentinel"
-msgstr "QuantSentinel"
+msgid "Workspace"
+msgstr "工作区"
+
+msgid "Language"
+msgstr "语言"
+
+msgid "Sign out"
+msgstr "退出登录"
+
+msgid "Watchlist, anomalies, and quick context."
+msgstr "关注列表、异常与快速上下文。"
+
+msgid "Export snapshot"
+msgstr "导出快照"
+
+msgid "Snapshot export is not yet wired."
+msgstr "快照导出功能尚未接入。"
+
+msgid "Anomalies"
+msgstr "异常"
+
+msgid "Monitor Alerts"
+msgstr "监控告警"
+
+msgid "Alert Rules"
+msgstr "告警规则"
+
+msgid "Recent Alert Events"
+msgstr "近期告警事件"
