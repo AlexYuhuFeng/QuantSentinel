@@ -24,6 +24,7 @@ from quantsentinel.infra.db.models import UserRole
 K_AUTH = "qs_auth"
 K_CONTEXT = "qs_context"
 K_UI = "qs_ui"
+K_APP = "qs_app"
 
 
 @dataclass
@@ -67,6 +68,8 @@ def _ensure_defaults() -> None:
         st.session_state[K_CONTEXT] = GlobalContext()
     if K_UI not in st.session_state:
         st.session_state[K_UI] = UIState()
+    if K_APP not in st.session_state:
+        st.session_state[K_APP] = {}
 
 
 # -----------------------------
@@ -86,6 +89,11 @@ def ctx() -> GlobalContext:
 def ui() -> UIState:
     _ensure_defaults()
     return st.session_state[K_UI]
+
+
+def app_state() -> dict[str, Any]:
+    _ensure_defaults()
+    return st.session_state[K_APP]
 
 
 # -----------------------------

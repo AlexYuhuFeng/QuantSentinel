@@ -1,26 +1,36 @@
 from __future__ import annotations
-import streamlit as st
+
 from typing import Callable
 
-from quantsentinel.app.ui.state import ui, close_drawer
+import streamlit as st
+
+from quantsentinel.app.ui.state import close_drawer, ui
+
 
 class Drawer:
-    """
-    Sidebar drawer driven by UI state.
-    """
+    """Right-side details drawer driven by UI state."""
 
     @staticmethod
-    def render(render_fn: Callable[[dict[str, object]], None]) -> None:
-        """
-        Renders the drawer if open, dispatching based on kind/payload.
-        """
+    def render(
+        *,
+        render_fn: Callable[[str | None, dict[str, object]], None] | None = None,
+        title: str = "Details",
+    ) -> None:
         u = ui()
+
+        st.markdown(f"### {title}")
         if not u.drawer_open:
+            st.caption("No selection")
             return
 
-        with st.sidebar:
-            st.markdown(f"## {u.drawer_kind}")
-            render_fn(u.drawer_payload)
-            if st.button("Close"):
-                close_drawer()
-                st.experimental_rerun()
+        payload: dict[str, object] = (u.drawer_payload or {})
+        st.caption(f"Kind: {u.drawer_kind or '-'}")
+
+        if render_fn is None:
+            st.json(payload)
+        else:
+            render_fn(u.drawer_kind, payload)
+
+        if st.button("Close", key="drawer_close"):
+            close_drawer()
+            st.rerun()
