@@ -1,1 +1,246 @@
-# English translations
+# English translations for QuantSentinel
+# This file is the base (English) translation template.
+# msgid is original text; msgstr matches msgid for base language.
+# NOTE: Keep msgstr identical to msgid for English.
+#
+# QUANT SENTINEL UI — COMMON PHRASES
+# -------------------------------------------------------------------
+
+msgid ""
+msgstr ""
+"Project-Id-Version: QuantSentinel 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-01-01 00:00+0000\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# --- Navigation / Menus ---
+
+msgid "Market"
+msgstr "Market"
+
+msgid "Explore"
+msgstr "Explore"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Research"
+msgstr "Research"
+  
+msgid "Strategy"
+msgstr "Strategy"
+
+msgid "Help"
+msgstr "Help"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Sign In"
+msgstr "Sign In"
+
+msgid "Sign Out"
+msgstr "Sign Out"
+
+msgid "Refresh"
+msgstr "Refresh"
+
+msgid "Settings"
+msgstr "Settings"
+
+# --- Buttons ---
+
+msgid "Submit"
+msgstr "Submit"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Create"
+msgstr "Create"
+
+msgid "Update"
+msgstr "Update"
+
+msgid "Add"
+msgstr "Add"
+
+msgid "Remove"
+msgstr "Remove"
+
+# --- Forms / Labels ---
+
+msgid "Username"
+msgstr "Username"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Confirm Password"
+msgstr "Confirm Password"
+
+msgid "Enter username"
+msgstr "Enter username"
+
+msgid "Enter email"
+msgstr "Enter email"
+
+msgid "Enter password"
+msgstr "Enter password"
+
+msgid "Role"
+msgstr "Role"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Search"
+msgstr "Search"
+
+msgid "Filter by"
+msgstr "Filter by"
+
+msgid "Select"
+msgstr "Select"
+
+# --- Alerts / Messages ---
+
+msgid "Invalid credentials."
+msgstr "Invalid credentials."
+
+msgid "User is inactive."
+msgstr "User is inactive."
+
+msgid "Changes saved successfully."
+msgstr "Changes saved successfully."
+
+msgid "Error occurred"
+msgstr "Error occurred"
+
+msgid "Are you sure?"
+msgstr "Are you sure?"
+
+msgid "No data available."
+msgstr "No data available."
+
+msgid "Loading..."
+msgstr "Loading..."
+
+msgid "Success"
+msgstr "Success"
+
+msgid "Failure"
+msgstr "Failure"
+
+# --- Table Headers ---
+
+msgid "Ticker"
+msgstr "Ticker"
+
+msgid "Last Price"
+msgstr "Last Price"
+
+msgid "Change"
+msgstr "Change"
+
+msgid "Volume"
+msgstr "Volume"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Open"
+msgstr "Open"
+
+msgid "High"
+msgstr "High"
+
+msgid "Low"
+msgstr "Low"
+
+msgid "Actions"
+msgstr "Actions"
+
+msgid "Results"
+msgstr "Results"
+
+# --- Notifications ---
+
+msgid "New alert generated"
+msgstr "New alert generated"
+
+msgid "Notification sent"
+msgstr "Notification sent"
+
+msgid "Notification failed"
+msgstr "Notification failed"
+
+# --- Task / Background Status ---
+
+msgid "Task queued"
+msgstr "Task queued"
+
+msgid "Task running"
+msgstr "Task running"
+
+msgid "Task succeeded"
+msgstr "Task succeeded"
+
+msgid "Task failed"
+msgstr "Task failed"
+
+# --- Strategy / Backtest UI ---
+
+msgid "Backtest"
+msgstr "Backtest"
+
+msgid "Performance"
+msgstr "Performance"
+
+msgid "Results Chart"
+msgstr "Results Chart"
+
+msgid "Parameters"
+msgstr "Parameters"
+
+# --- Search / Monitor UI ---
+
+msgid "Watchlist"
+msgstr "Watchlist"
+
+msgid "Add to Watchlist"
+msgstr "Add to Watchlist"
+
+msgid "Remove from Watchlist"
+msgstr "Remove from Watchlist"
+
+msgid "Refresh All"
+msgstr "Refresh All"
+
+msgid "Refresh selected"
+msgstr "Refresh selected"
+
+msgid "Data stale"
+msgstr "Data stale"
+
+msgid "Percent Change"
+msgstr "Percent Change"
+
+msgid "Last Close"
+msgstr "Last Close"
