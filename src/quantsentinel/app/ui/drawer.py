@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from typing import Callable
 
-import streamlit as st
-
-from quantsentinel.app.ui.state import close_drawer, ui
-
+from quantsentinel.app.ui.state import auth, close_drawer, ui
+from quantsentinel.i18n.gettext import get_translator
 
 class Drawer:
     """Right-side details drawer driven by UI state."""
@@ -17,20 +15,14 @@ class Drawer:
         title: str = "Details",
     ) -> None:
         u = ui()
-
-        st.markdown(f"### {title}")
+        t = get_translator(auth().language)
         if not u.drawer_open:
             st.caption("No selection")
             return
 
-        payload: dict[str, object] = (u.drawer_payload or {})
-        st.caption(f"Kind: {u.drawer_kind or '-'}")
-
-        if render_fn is None:
-            st.json(payload)
-        else:
-            render_fn(u.drawer_kind, payload)
-
-        if st.button("Close", key="drawer_close"):
-            close_drawer()
-            st.rerun()
+        with st.sidebar:
+            st.markdown(f"## {u.drawer_kind}")
+            render_fn(u.drawer_payload)
+            if st.button(t("Close")):
+                close_drawer()
+                st.experimental_rerun()
