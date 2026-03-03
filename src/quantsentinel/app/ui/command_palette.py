@@ -3,7 +3,8 @@ from __future__ import annotations
 import streamlit as st
 from typing import Callable
 
-from quantsentinel.app.ui.state import ui, open_drawer, close_drawer
+from quantsentinel.app.ui.state import auth, ui
+from quantsentinel.i18n.gettext import get_translator
 
 class CommandPalette:
     """
@@ -23,8 +24,9 @@ class CommandPalette:
         """
         Renders the palette and executes selected action.
         """
+        t = get_translator(auth().language)
         u = ui()
-        query = st.text_input("Command palette...", value=u.command_palette_query)
+        query = st.text_input(t("Command palette..."), value=u.command_palette_query)
         u.command_palette_query = query
         if query:
             matches = {
