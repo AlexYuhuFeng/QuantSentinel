@@ -194,3 +194,24 @@ def push_toast(kind: str, message: str) -> None:
         u.toast_queue = []
     u.toast_queue.append({"kind": kind, "message": message})
     st.session_state[K_UI] = u
+
+
+
+def queue_shortcut_event(event: str) -> None:
+    _ensure_defaults()
+    current_ui = ui()
+    if current_ui.shortcut_events is None:
+        current_ui.shortcut_events = []
+    current_ui.shortcut_events.append(event)
+    current_ui.last_shortcut_event = event
+    st.session_state[K_UI] = current_ui
+
+
+def pop_shortcut_event() -> str | None:
+    _ensure_defaults()
+    current_ui = ui()
+    if not current_ui.shortcut_events:
+        return None
+    event = current_ui.shortcut_events.pop(0)
+    st.session_state[K_UI] = current_ui
+    return event

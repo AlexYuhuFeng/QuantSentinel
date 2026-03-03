@@ -36,6 +36,7 @@ class AuditService:
                     entity_id=command_id,
                     payload={
                         "command_id": command_id,
+                        "actor": str(actor_id) if actor_id is not None else None,
                         **(payload or {}),
                     },
                     actor_id=actor_id,
