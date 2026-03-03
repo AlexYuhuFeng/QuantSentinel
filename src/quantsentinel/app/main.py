@@ -36,7 +36,7 @@ def _t():
 
 def render_login() -> None:
     t = _t()
-    st.title("QuantSentinel")
+    st.title(t("QuantSentinel"))
     st.caption(t("Team Edition trading research terminal"))
 
     with st.form("login_form", clear_on_submit=False):
@@ -84,7 +84,7 @@ def render_header() -> None:
 
     left, mid, right = st.columns([1.2, 2.6, 1.2], vertical_alignment="center")
     with left:
-        st.markdown("### QuantSentinel")
+        st.markdown(f"### {t('QuantSentinel')}")
 
     with mid:
         # Global context placeholder (ticker/date/workspace)

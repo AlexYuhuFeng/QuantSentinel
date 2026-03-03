@@ -244,3 +244,14 @@ msgstr "Percent Change"
 
 msgid "Last Close"
 msgstr "Last Close"
+
+msgid "Command palette..."
+msgstr "命令面板..."
+
+
+msgid "Page"
+msgstr "页码"
+
+
+msgid "QuantSentinel"
+msgstr "QuantSentinel"
