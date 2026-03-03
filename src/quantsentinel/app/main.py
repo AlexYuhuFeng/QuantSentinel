@@ -37,7 +37,7 @@ def _t():
 
 def render_login() -> None:
     t = _t()
-    st.title("QuantSentinel")
+    st.title(t("QuantSentinel"))
     st.caption(t("Team Edition trading research terminal"))
 
     with st.form("login_form", clear_on_submit=False):
