@@ -22,6 +22,7 @@ def render_table(
 
     total = len(df)
     pages = max(1, (total + page_size - 1) // page_size)
+    t = get_translator(auth().language)
 
     page = st.number_input(t("Page"), 1, pages, 1)
     start = (page - 1) * page_size
