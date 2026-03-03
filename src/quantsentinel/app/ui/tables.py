@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 import pandas as pd
 import streamlit as st
 
 from quantsentinel.app.ui.state import auth
 from quantsentinel.i18n.gettext import get_translator
+
 
 def render_table(
     data: pd.DataFrame | list[dict[str, object]],

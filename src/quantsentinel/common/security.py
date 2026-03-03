@@ -15,7 +15,6 @@ from __future__ import annotations
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
-
 # Tuned defaults (reasonable for team internal apps).
 # You can tighten these later based on your infra and latency tolerance.
 _PH = PasswordHasher(

@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 import streamlit as st
-from quantsentinel.app.ui.state import ui, _ensure_defaults
+
+from quantsentinel.app.ui.state import _ensure_defaults, ui
+
 
 def flush_toasts() -> None:
     """

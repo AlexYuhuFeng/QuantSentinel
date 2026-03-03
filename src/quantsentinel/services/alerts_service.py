@@ -19,9 +19,9 @@ from datetime import datetime, timezone
 from typing import Any
 
 from quantsentinel.infra.db.engine import session_scope
-from quantsentinel.infra.db.models import AlertRule, AlertEventStatus
-from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
+from quantsentinel.infra.db.models import AlertEventStatus, AlertRule
 from quantsentinel.infra.db.repos.alerts_repo import AlertsRepo
+from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
 from quantsentinel.infra.db.repos.events_repo import EventsRepo
 from quantsentinel.infra.db.repos.instruments_repo import InstrumentsRepo
 from quantsentinel.infra.db.repos.prices_repo import PricesRepo
