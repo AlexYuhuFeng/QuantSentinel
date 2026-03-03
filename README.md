@@ -423,8 +423,16 @@ UI 必须显示最近任务。
 
 1. setup Python 3.12
 2. install dev dependencies
-3. `ruff check .`
-4. `pytest --cov`
+3. `make i18n-check`
+4. `make lint && make test`
+
+---
+
+## 13.3 开发环境版本基线
+
+- 开发环境 Python 版本：**3.12+**。
+- CI 固定使用 Python `3.12`（见 `.github/workflows/ci.yml`）。
+- 本地建议通过 `.python-version`（仓库已提供）或容器化开发，避免团队成员版本漂移。
 
 ---
 
@@ -465,6 +473,17 @@ UI 必须显示最近任务。
 2. Bootstrap fallback（代码内开发默认值）
 
 > 建议：本地开发可直接使用 fallback，生产部署必须通过环境变量显式注入。
+
+---
+
+## 15.2 基线自检（PR 前必跑）
+
+建议在提交 PR 前，至少执行以下命令：
+
+1. `make i18n-check`
+2. `make i18n-build`
+3. `make lint`
+4. `make test`
 
 ---
 
