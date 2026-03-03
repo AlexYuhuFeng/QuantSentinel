@@ -28,14 +28,10 @@ jobs:
           poetry --version
           poetry install --with dev
 
-      - name: Lint (ruff)
+      - name: i18n checks
         run: |
-          poetry run ruff check .
+          make i18n-check
 
-      - name: i18n integration snapshots
+      - name: Lint + tests
         run: |
-          poetry run pytest -q tests/integration/i18n
-
-      - name: Tests (pytest + coverage)
-        run: |
-          poetry run pytest -q --cov=src/quantsentinel --cov-report=term-missing
+          make lint && make test
