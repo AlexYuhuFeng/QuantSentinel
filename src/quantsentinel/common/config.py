@@ -1,97 +1,81 @@
 """
-Application configuration (single source of truth).
+Configuration management (single source of truth).
 
-- Uses pydantic-settings for type-safe environment parsing
-- Supports .env loading (via pydantic)
-- Centralizes all config access (no direct os.getenv elsewhere)
-- Safe repr (does not expose secrets)
+- Uses pydantic-settings for strong typing & validation
+- Reads from environment (.env supported via docker-compose env_file)
 """
 
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Literal
 
-from pydantic import Field, SecretStr
+from pydantic import AnyUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """
-    Global application settings.
-
-    Loaded from environment variables and optional .env file.
-    """
-
-    # -----------------------------
-    # Core environment
-    # -----------------------------
-    environment: Literal["dev", "test", "prod"] = Field(
-        default="dev", description="Application environment"
-    )
-
-    # -----------------------------
-    # Database
-    # -----------------------------
-    database_url: str = Field(..., description="SQLAlchemy database URL")
-
-    # -----------------------------
-    # Redis / Celery
-    # -----------------------------
-    redis_url: str = Field(..., description="Redis connection URL")
-    celery_broker_url: str | None = None
-    celery_result_backend: str | None = None
-
-    # -----------------------------
-    # Security
-    # -----------------------------
-    app_secret_key: SecretStr = Field(..., description="Application secret key")
-
-    # -----------------------------
-    # Localization
-    # -----------------------------
-    default_language: str = Field(default="en", description="Default UI language")
-
-    # -----------------------------
-    # Server
-    # -----------------------------
-    app_host: str = Field(default="0.0.0.0")
-    app_port: int = Field(default=8501)
-
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
+        env_prefix="",
         case_sensitive=False,
         extra="ignore",
     )
 
-    def model_post_init(self, __context):
-        """
-        Post-processing logic after settings load.
-        """
-        # If celery URLs not explicitly set, default to redis_url
-        if self.celery_broker_url is None:
-            self.celery_broker_url = self.redis_url
+    # -----------------------------
+    # App
+    # -----------------------------
+    app_name: str = "QuantSentinel"
+    default_language: str = "en"
 
-        if self.celery_result_backend is None:
-            self.celery_result_backend = self.redis_url
+    # -----------------------------
+    # Database
+    # -----------------------------
+    database_url: str = Field(
+        ...,
+        alias="DATABASE_URL",
+        description="SQLAlchemy DB URL, e.g. postgresql+psycopg://user:pass@db:5432/quantsentinel",
+    )
 
-    def __repr__(self) -> str:
-        return (
-            "Settings("
-            f"environment={self.environment}, "
-            f"database_url='***', "
-            f"redis_url='{self.redis_url}', "
-            f"default_language='{self.default_language}'"
-            ")"
-        )
+    db_pool_size: int = Field(5, alias="DB_POOL_SIZE")
+    db_max_overflow: int = Field(10, alias="DB_MAX_OVERFLOW")
+    db_pool_timeout: int = Field(30, alias="DB_POOL_TIMEOUT")
+
+    # -----------------------------
+    # Redis / Celery
+    # -----------------------------
+    redis_url: str = Field("redis://redis:6379/0", alias="REDIS_URL")
+
+    celery_broker_url: str = Field("redis://redis:6379/1", alias="CELERY_BROKER_URL")
+    celery_result_backend: str = Field("redis://redis:6379/2", alias="CELERY_RESULT_BACKEND")
+
+    # -----------------------------
+    # Email (optional)
+    # -----------------------------
+    email_smtp_host: str | None = Field(None, alias="EMAIL_SMTP_HOST")
+    email_smtp_port: int = Field(587, alias="EMAIL_SMTP_PORT")
+    email_smtp_user: str | None = Field(None, alias="EMAIL_SMTP_USER")
+    email_smtp_password: str | None = Field(None, alias="EMAIL_SMTP_PASSWORD")
+    email_from: str | None = Field(None, alias="EMAIL_FROM")
+
+    # -----------------------------
+    # Feishu (optional)
+    # -----------------------------
+    feishu_app_id: str | None = Field(None, alias="FEISHU_APP_ID")
+    feishu_app_secret: str | None = Field(None, alias="FEISHU_APP_SECRET")
+
+    # -----------------------------
+    # WeChat Work / 企业微信 (optional)
+    # -----------------------------
+    wechat_corp_id: str | None = Field(None, alias="WECHAT_CORP_ID")
+    wechat_corp_secret: str | None = Field(None, alias="WECHAT_CORP_SECRET")
+    wechat_agent_id: str | None = Field(None, alias="WECHAT_AGENT_ID")
+
+    # -----------------------------
+    # Security
+    # -----------------------------
+    # For future: JWT/session signing etc (Team Edition currently uses Streamlit session only)
+    secret_key: str | None = Field(None, alias="SECRET_KEY")
 
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """
-    Cached settings loader (singleton per process).
-
-    Ensures all modules share the same config instance.
-    """
     return Settings()

@@ -1,16 +1,9 @@
-"""
-SQLAlchemy ORM models (system-of-record).
-
-Rules:
-- This module defines ONLY database models + enums + table constraints.
-- No business logic, no services, no Streamlit.
-"""
-
 from __future__ import annotations
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import (
@@ -18,9 +11,8 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
-    Enum,
+    Enum as SAEnum,
     ForeignKey,
-    Index,
     Integer,
     Numeric,
     String,
@@ -28,35 +20,17 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-
-
-# -----------------------------
-# Base & mixins
-# -----------------------------
 
 
 class Base(DeclarativeBase):
     pass
 
 
-class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
 # -----------------------------
-# Enums
+# Enums (must match DB enum types)
 # -----------------------------
-
 
 class UserRole(str, enum.Enum):
     ADMIN = "Admin"
@@ -89,32 +63,29 @@ class LayoutWorkspace(str, enum.Enum):
 # Core tables
 # -----------------------------
 
-
-class User(Base, TimestampMixin):
+class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
-
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    role: Mapped[UserRole] = mapped_column(Enum(UserRole, name="user_role"), nullable=False)
-
+    role: Mapped[UserRole] = mapped_column(
+        SAEnum(UserRole, name="user_role", native_enum=True),
+        nullable=False,
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
-
     default_language: Mapped[str] = mapped_column(String(32), nullable=False, server_default="en")
 
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    # relationships
-    audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="actor", cascade="all, delete-orphan")
-    tasks: Mapped[list["Task"]] = relationship(back_populates="actor", cascade="all, delete-orphan")
-    layout_presets: Mapped[list["UILayoutPreset"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"User(id={self.id}, username={self.username!r}, role={self.role.value!r})"
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
 
 
 class AuditLog(Base):
@@ -124,130 +95,142 @@ class AuditLog(Base):
     ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     actor_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    action: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    entity_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    entity_id: Mapped[str] = mapped_column(String(128), nullable=True, index=True)
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    entity_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
     payload_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
 
-    actor: Mapped[User | None] = relationship(back_populates="audit_logs")
-
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"AuditLog(id={self.id}, action={self.action!r}, entity_type={self.entity_type!r})"
+    actor: Mapped[User | None] = relationship("User", lazy="joined")
 
 
-class Task(Base, TimestampMixin):
-    """
-    Background task tracking (Celery + UI visibility).
-
-    Stores coarse progress and details; detailed logs can also be saved as artifacts.
-    """
-
+class Task(Base):
     __tablename__ = "tasks"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_type: Mapped[str] = mapped_column(String(64), nullable=False)
 
-    task_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus, name="task_status"), nullable=False, index=True)
-
-    progress: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")  # 0..100
-
-    detail: Mapped[str] = mapped_column(Text, nullable=True)
+    status: Mapped[TaskStatus] = mapped_column(
+        SAEnum(TaskStatus, name="task_status", native_enum=True),
+        nullable=False,
+    )
+    progress: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    detail: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     actor_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    actor: Mapped[User | None] = relationship(back_populates="tasks")
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    actor: Mapped[User | None] = relationship("User", lazy="joined")
 
 
-class Instrument(Base, TimestampMixin):
+class Instrument(Base):
     __tablename__ = "instruments"
 
     ticker: Mapped[str] = mapped_column(String(64), primary_key=True)
-
     name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     exchange: Mapped[str | None] = mapped_column(String(64), nullable=True)
     currency: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
     is_watched: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
-
     source: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
-    def __repr__(self) -> str:  # pragma: no cover
-        return f"Instrument(ticker={self.ticker!r}, watched={self.is_watched})"
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
 
 
 class PriceDaily(Base):
     __tablename__ = "prices_daily"
+    __table_args__ = (UniqueConstraint("ticker", "date", name="uq_prices_daily_ticker_date"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
-    ticker: Mapped[str] = mapped_column(String(64), ForeignKey("instruments.ticker", ondelete="CASCADE"), nullable=False)
-    date: Mapped[datetime] = mapped_column(Date, nullable=False)
+    ticker: Mapped[str] = mapped_column(
+        String(64), ForeignKey("instruments.ticker", ondelete="CASCADE"), nullable=False
+    )
+    date: Mapped[date] = mapped_column(Date, nullable=False)
 
-    open: Mapped[float | None] = mapped_column(Numeric(18, 8), nullable=True)
-    high: Mapped[float | None] = mapped_column(Numeric(18, 8), nullable=True)
-    low: Mapped[float | None] = mapped_column(Numeric(18, 8), nullable=True)
-    close: Mapped[float | None] = mapped_column(Numeric(18, 8), nullable=True)
-    adj_close: Mapped[float | None] = mapped_column(Numeric(18, 8), nullable=True)
-    volume: Mapped[float | None] = mapped_column(Numeric(24, 2), nullable=True)
+    open: Mapped[Decimal | None] = mapped_column(Numeric(18, 8), nullable=True)
+    high: Mapped[Decimal | None] = mapped_column(Numeric(18, 8), nullable=True)
+    low: Mapped[Decimal | None] = mapped_column(Numeric(18, 8), nullable=True)
+    close: Mapped[Decimal | None] = mapped_column(Numeric(18, 8), nullable=True)
+    adj_close: Mapped[Decimal | None] = mapped_column(Numeric(18, 8), nullable=True)
+
+    volume: Mapped[Decimal | None] = mapped_column(Numeric(24, 2), nullable=True)
 
     source: Mapped[str] = mapped_column(String(64), nullable=False, server_default="unknown")
     ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    revision_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True, default=uuid.uuid4)
 
-    __table_args__ = (
-        UniqueConstraint("ticker", "date", name="uq_prices_daily_ticker_date"),
-        Index("ix_prices_daily_ticker_date", "ticker", "date"),
-    )
+    revision_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
+
+    instrument: Mapped[Instrument] = relationship("Instrument", lazy="joined")
 
 
-class Recipe(Base, TimestampMixin):
-    """
-    Recipe defines derived series / indicator computations (versioned & reproducible).
-    """
+# -----------------------------
+# Derived/recipes
+# -----------------------------
 
+class Recipe(Base):
     __tablename__ = "recipes"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    kind: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kind: Mapped[str] = mapped_column(String(64), nullable=False)
     params_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
 
 
 class DerivedDaily(Base):
     __tablename__ = "derived_daily"
+    __table_args__ = (UniqueConstraint("ticker", "date", "field", name="uq_derived_daily_ticker_date_field"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
-    ticker: Mapped[str] = mapped_column(String(64), ForeignKey("instruments.ticker", ondelete="CASCADE"), nullable=False)
-    date: Mapped[datetime] = mapped_column(Date, nullable=False)
-
+    ticker: Mapped[str] = mapped_column(
+        String(64), ForeignKey("instruments.ticker", ondelete="CASCADE"), nullable=False
+    )
+    date: Mapped[date] = mapped_column(Date, nullable=False)
     field: Mapped[str] = mapped_column(String(64), nullable=False)
-    value: Mapped[float | None] = mapped_column(Numeric(24, 10), nullable=True)
+    value: Mapped[Decimal | None] = mapped_column(Numeric(24, 10), nullable=True)
 
-    recipe_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("recipes.id"), nullable=True)
-    revision_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
-
-    __table_args__ = (
-        UniqueConstraint("ticker", "date", "field", name="uq_derived_daily_ticker_date_field"),
-        Index("ix_derived_daily_ticker_field", "ticker", "field"),
+    recipe_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("recipes.id"), nullable=True
     )
 
+    revision_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
 
-class AlertRule(Base, TimestampMixin):
+
+# -----------------------------
+# Alerts
+# -----------------------------
+
+class AlertRule(Base):
     __tablename__ = "alert_rules"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    rule_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    rule_type: Mapped[str] = mapped_column(String(64), nullable=False)
 
     scope_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
     params_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
@@ -255,110 +238,186 @@ class AlertRule(Base, TimestampMixin):
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
     severity: Mapped[str] = mapped_column(String(16), nullable=False, server_default="MEDIUM")
 
-    # governance fields
-    dedup_key: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    dedup_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
     silenced_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     created_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    creator: Mapped[User | None] = relationship("User", lazy="joined")
 
 
 class AlertEvent(Base):
     __tablename__ = "alert_events"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    rule_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("alert_rules.id", ondelete="CASCADE"), nullable=False)
-    ticker: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    rule_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("alert_rules.id", ondelete="CASCADE"), nullable=False
+    )
+
+    ticker: Mapped[str] = mapped_column(String(64), nullable=False)
 
     event_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    asof_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
+    asof_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     message: Mapped[str] = mapped_column(Text, nullable=False)
     context_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
 
     status: Mapped[AlertEventStatus] = mapped_column(
-        Enum(AlertEventStatus, name="alert_event_status"),
+        SAEnum(AlertEventStatus, name="alert_event_status", native_enum=True),
         nullable=False,
-        server_default=AlertEventStatus.NEW.value,
-        index=True,
+        server_default="NEW",
     )
+
     ack_ts: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    ack_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    ack_by: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
-    __table_args__ = (Index("ix_alert_events_rule_ts", "rule_id", "event_ts"),)
+    rule: Mapped[AlertRule] = relationship("AlertRule", lazy="joined")
+    acker: Mapped[User | None] = relationship("User", lazy="joined")
 
 
-class StrategyProject(Base, TimestampMixin):
+# -----------------------------
+# Strategy projects/runs
+# -----------------------------
+
+class StrategyProject(Base):
     __tablename__ = "strategy_projects"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-
-
-class StrategyRun(Base, TimestampMixin):
-    __tablename__ = "strategy_runs"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    project_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("strategy_projects.id", ondelete="SET NULL"), nullable=True, index=True
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    family: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
 
+
+class StrategyRun(Base):
+    __tablename__ = "strategy_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("strategy_projects.id", ondelete="SET NULL"), nullable=True
+    )
+
+    family: Mapped[str] = mapped_column(String(64), nullable=False)
     params_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
     metrics_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
     artifacts_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
 
-    start_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
-    end_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    score: Mapped[float | None] = mapped_column(Numeric(18, 8), nullable=True)
+    score: Mapped[Decimal | None] = mapped_column(Numeric(18, 8), nullable=True)
 
-    data_revision_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
+    data_revision_id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
     code_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     random_seed: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    __table_args__ = (Index("ix_strategy_runs_project_created", "project_id", "created_at"),)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
 
+    project: Mapped[StrategyProject | None] = relationship("StrategyProject", lazy="joined")
+
+
+# -----------------------------
+# Refresh log
+# -----------------------------
 
 class RefreshLog(Base):
     __tablename__ = "refresh_log"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-
     run_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
-
-    ticker: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    last_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
-
-    revision_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
+    ticker: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    last_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    revision_id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
 
 
-class UILayoutPreset(Base, TimestampMixin):
+# -----------------------------
+# UI layout presets
+# -----------------------------
+
+class UILayoutPreset(Base):
     __tablename__ = "ui_layout_presets"
+    __table_args__ = (UniqueConstraint("user_id", "workspace", "name", name="uq_layout_user_workspace_name"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    user: Mapped[User] = relationship(back_populates="layout_presets")
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
 
     name: Mapped[str] = mapped_column(String(128), nullable=False)
-    workspace: Mapped[LayoutWorkspace] = mapped_column(Enum(LayoutWorkspace, name="layout_workspace"), nullable=False, index=True)
+
+    workspace: Mapped[LayoutWorkspace] = mapped_column(
+        SAEnum(LayoutWorkspace, name="layout_workspace", native_enum=True),
+        nullable=False,
+    )
 
     layout_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
     version: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
     is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "workspace", "name", name="uq_layout_user_workspace_name"),
-        Index("ix_layout_user_workspace_default", "user_id", "workspace", "is_default"),
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    user: Mapped[User] = relationship("User", lazy="joined")
+
+
+# -----------------------------
+# Notifications (needs a new migration 0002)
+# -----------------------------
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    status: Mapped[str] = mapped_column(String(16), nullable=False)  # PENDING/SENT/FAILED
+
+    recipients_json: Mapped[list[str]] = mapped_column(JSONB, nullable=False, server_default="[]")
+    channels_json: Mapped[list[str]] = mapped_column(JSONB, nullable=False, server_default="[]")
+
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+
+    severity: Mapped[str] = mapped_column(String(16), nullable=False, server_default="MEDIUM")
+
+    tags_json: Mapped[list[str]] = mapped_column(JSONB, nullable=False, server_default="[]")
+    context_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, server_default="{}")
+
+    dedup_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
+    related_entity_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    related_entity_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
+    detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )

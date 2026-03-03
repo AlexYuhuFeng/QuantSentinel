@@ -1,77 +1,70 @@
 """
-Database engine & session management (SQLAlchemy 2.0).
+Database engine + session utilities.
 
-Design goals:
-- Single source of truth for Engine + Session factory
-- No side effects on import (no immediate DB connections)
-- Safe for multi-process (web/worker/beat) deployment
+Goals:
+- SQLAlchemy 2.0 style
+- Lazy engine creation (no connection on import)
+- One engine per process
+- Standard session_scope() transaction boundary
 """
 
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Iterator
+from typing import Any, Generator
 
-from sqlalchemy import Engine, text
-from sqlalchemy.engine import create_engine as sa_create_engine
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from quantsentinel.common.config import get_settings
 
-
-def create_engine(url: str) -> Engine:
-    """
-    Create a SQLAlchemy Engine.
-
-    Args:
-        url: SQLAlchemy database URL (e.g., postgresql+psycopg://...)
-
-    Returns:
-        SQLAlchemy Engine instance.
-    """
-    # Notes:
-    # - pool_pre_ping avoids stale connections (important in containers)
-    # - pool_recycle avoids long-lived connections across network changes
-    return sa_create_engine(
-        url,
-        future=True,
-        pool_pre_ping=True,
-        pool_recycle=1800,
-        pool_size=5,
-        max_overflow=10,
-    )
+_ENGINE: Engine | None = None
+_SESSIONMAKER: sessionmaker[Session] | None = None
 
 
 def get_engine() -> Engine:
-    """
-    Lazily create and return the application Engine.
-    """
+    global _ENGINE, _SESSIONMAKER
+
+    if _ENGINE is not None and _SESSIONMAKER is not None:
+        return _ENGINE
+
     settings = get_settings()
-    return create_engine(settings.database_url)
+    if not settings.database_url:
+        raise RuntimeError("DATABASE_URL is not configured")
+
+    from sqlalchemy import create_engine
+
+    _ENGINE = create_engine(
+        settings.database_url,
+        future=True,
+        pool_pre_ping=True,
+        pool_size=settings.db_pool_size,
+        max_overflow=settings.db_max_overflow,
+        pool_timeout=settings.db_pool_timeout,
+    )
+
+    _SESSIONMAKER = sessionmaker(bind=_ENGINE, class_=Session, autoflush=False, autocommit=False, future=True)
+    return _ENGINE
 
 
-def get_session_factory() -> sessionmaker[Session]:
-    """
-    Create a configured sessionmaker bound to the application engine.
-    """
-    engine = get_engine()
-    return sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+def get_sessionmaker() -> sessionmaker[Session]:
+    global _SESSIONMAKER
+    if _SESSIONMAKER is None:
+        _ = get_engine()
+    assert _SESSIONMAKER is not None
+    return _SESSIONMAKER
 
 
 @contextmanager
-def session_scope() -> Iterator[Session]:
+def session_scope() -> Generator[Session, None, None]:
     """
-    Provide a transactional scope around a series of operations.
-
-    Usage:
-        with session_scope() as session:
-            session.add(...)
-            ...
-
-    Commits on success, rollbacks on exception.
+    Transaction boundary:
+      - commit on success
+      - rollback on error
+      - always close
     """
-    SessionLocal = get_session_factory()
+    SessionLocal = get_sessionmaker()
     session = SessionLocal()
     try:
         yield session
@@ -83,17 +76,15 @@ def session_scope() -> Iterator[Session]:
         session.close()
 
 
-def db_healthcheck() -> dict[str, str]:
+def db_healthcheck() -> dict[str, Any]:
     """
-    Lightweight DB health check.
-
     Returns:
-        {"status": "ok"} on success, or {"status": "error", "detail": "..."} on failure.
+      {"status": "ok"} or {"status": "error", "detail": "..."}
     """
     try:
         engine = get_engine()
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         return {"status": "ok"}
-    except SQLAlchemyError as e:
+    except Exception as e:
         return {"status": "error", "detail": str(e)}

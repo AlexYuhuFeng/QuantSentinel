@@ -27,22 +27,6 @@ services:
       timeout: 3s
       retries: 20
 
-  migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: quantsentinel_migrate
-    env_file:
-      - .env
-    depends_on:
-      db:
-        condition: service_healthy
-    command: >
-      bash -lc "
-      alembic upgrade head
-      "
-    restart: "no"
-
   web:
     build:
       context: .
@@ -51,8 +35,8 @@ services:
     env_file:
       - .env
     depends_on:
-      migrate:
-        condition: service_completed_successfully
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
     ports:
@@ -61,11 +45,10 @@ services:
       - artifacts:/app/artifacts
     command: >
       bash -lc "
+      alembic -c /app/alembic.ini upgrade head &&
       streamlit run src/quantsentinel/app/main.py
         --server.port=8501
         --server.address=0.0.0.0
-        --server.headless=true
-        --browser.gatherUsageStats=false
       "
 
   worker:
@@ -76,14 +59,15 @@ services:
     env_file:
       - .env
     depends_on:
-      migrate:
-        condition: service_completed_successfully
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
       - artifacts:/app/artifacts
     command: >
       bash -lc "
+      alembic -c /app/alembic.ini upgrade head &&
       celery -A quantsentinel.infra.tasks.celery_app:celery_app worker
         --loglevel=INFO
         --concurrency=2
@@ -97,14 +81,15 @@ services:
     env_file:
       - .env
     depends_on:
-      migrate:
-        condition: service_completed_successfully
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
       - artifacts:/app/artifacts
     command: >
       bash -lc "
+      alembic -c /app/alembic.ini upgrade head &&
       celery -A quantsentinel.infra.tasks.celery_app:celery_app beat
         --loglevel=INFO
       "

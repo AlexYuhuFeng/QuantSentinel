@@ -4,6 +4,7 @@ Celery application factory for QuantSentinel.
 Rules:
 - Configuration must come from Settings (single source of truth).
 - Importing this module must not start any tasks; only define celery_app.
+- Beat schedule must be centrally defined (beat_schedule.py).
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from __future__ import annotations
 from celery import Celery
 
 from quantsentinel.common.config import get_settings
+from quantsentinel.infra.tasks.beat_schedule import build_beat_schedule
 
 
 def _make_celery() -> Celery:
@@ -40,6 +42,7 @@ def _make_celery() -> Celery:
         worker_prefetch_multiplier=1,
         task_acks_late=True,
         broker_connection_retry_on_startup=True,
+        beat_schedule=build_beat_schedule(),
     )
 
     return celery
