@@ -50,6 +50,12 @@ class UIState:
 
     # Shortcut help modal
     shortcuts_help_open: bool = False
+    shortcuts_registry: dict[str, str] | None = None
+    shortcut_events: list[str] | None = None
+    last_shortcut_event: str | None = None
+
+    # Ticker search focus
+    ticker_focus_requested: bool = False
 
     # Drawer (right panel)
     drawer_open: bool = False
@@ -163,3 +169,25 @@ def push_toast(kind: str, message: str) -> None:
         u.toast_queue = []
     u.toast_queue.append({"kind": kind, "message": message})
     st.session_state[K_UI] = u
+
+
+def queue_shortcut_event(event: str) -> None:
+    _ensure_defaults()
+    u = ui()
+    if event == u.last_shortcut_event:
+        return
+    if u.shortcut_events is None:
+        u.shortcut_events = []
+    u.shortcut_events.append(event)
+    u.last_shortcut_event = event
+    st.session_state[K_UI] = u
+
+
+def pop_shortcut_event() -> str | None:
+    _ensure_defaults()
+    u = ui()
+    if not u.shortcut_events:
+        return None
+    event = u.shortcut_events.pop(0)
+    st.session_state[K_UI] = u
+    return event

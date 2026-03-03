@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import streamlit as st
+import streamlit.components.v1 as components
 
+from quantsentinel.app.ui.components import render_shortcuts_help_dialog
+from quantsentinel.app.ui.shortcuts import dispatch_shortcut_events, mount_shortcut_listener, register_shortcuts
 from quantsentinel.app.ui.state import auth, clear_auth, set_authenticated, set_language, set_workspace
 from quantsentinel.common.config import get_settings
 from quantsentinel.infra.db.engine import db_healthcheck
@@ -90,6 +93,8 @@ def render_header() -> None:
         # Global context placeholder (ticker/date/workspace)
         st.caption(t("Terminal context"))
         st.write(f"**{t('Workspace')}**: {a.role.value if a.role else '-'}")
+        st.text_input("Ticker", key="qs_ticker_search", placeholder="AAPL / TSLA / BTCUSD")
+        _consume_ticker_focus_request()
 
     with right:
         lang = st.selectbox(
@@ -190,9 +195,36 @@ def main() -> None:
         render_login()
         return
 
+    register_shortcuts()
+    mount_shortcut_listener()
+    dispatch_shortcut_events()
+
     render_header()
     page_key = render_sidebar()
     render_page(page_key)
+    render_shortcuts_help_dialog()
+
+
+def _consume_ticker_focus_request() -> None:
+    if not st.session_state.get("qs_ui"):
+        return
+
+    app_ui = st.session_state["qs_ui"]
+    if not app_ui.ticker_focus_requested:
+        return
+
+    components.html(
+        """
+        <script>
+        const root = window.parent.document;
+        const input = root.querySelector('input[aria-label="Ticker"]');
+        if (input) input.focus();
+        </script>
+        """,
+        height=0,
+    )
+    app_ui.ticker_focus_requested = False
+    st.session_state["qs_ui"] = app_ui
 
 
 if __name__ == "__main__":
