@@ -32,6 +32,10 @@ jobs:
         run: |
           poetry run ruff check .
 
+      - name: i18n integration snapshots
+        run: |
+          poetry run pytest -q tests/integration/i18n
+
       - name: Tests (pytest + coverage)
         run: |
           poetry run pytest -q --cov=src/quantsentinel --cov-report=term-missing
