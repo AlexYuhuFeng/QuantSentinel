@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import streamlit as st
 
-from quantsentinel.app.ui.state import auth, clear_auth, set_authenticated, set_language, set_workspace
+from quantsentinel.app.ui.state import auth, clear_auth, ctx, set_authenticated, set_language, set_workspace
+from quantsentinel.services.layout_service import LayoutService
+from quantsentinel.infra.db.models import LayoutWorkspace
 from quantsentinel.common.config import get_settings
 from quantsentinel.infra.db.engine import db_healthcheck
 from quantsentinel.infra.db.models import UserRole
@@ -26,6 +28,64 @@ st.set_page_config(page_title="QuantSentinel", layout="wide")
 
 settings = get_settings()
 auth_svc = AuthService()
+
+
+layout_svc = LayoutService()
+
+
+def _workspace_enum(value: str) -> LayoutWorkspace:
+    return LayoutWorkspace(value)
+
+
+def _render_layout_menu(t) -> None:
+    a = auth()
+    if a.user_id is None:
+        return
+
+    workspace = _workspace_enum(ctx().workspace)
+
+    with st.popover(t("Layout"), use_container_width=False):
+        can_manage = LayoutService.can_manage_layouts(a.role)
+        layouts = layout_svc.load_layouts(actor_id=a.user_id, workspace=workspace)
+        if layouts:
+            options = [item.name for item in layouts]
+            selected_name = st.selectbox(t("Preset"), options=options, key=f"layout_select_{workspace.value}")
+            selected = next(item for item in layouts if item.name == selected_name)
+            if st.button(t("Load default"), key=f"layout_reset_{workspace.value}"):
+                layout_svc.reset_to_default(actor_id=a.user_id, workspace=workspace)
+                st.success(t("Layout reset to default."))
+        else:
+            st.caption(t("No layout presets."))
+            selected = None
+
+        if can_manage:
+            save_name = st.text_input(t("Name"), key=f"layout_name_{workspace.value}")
+            if st.button(t("Save"), key=f"layout_save_{workspace.value}"):
+                if save_name:
+                    layout_svc.save(actor_id=a.user_id, workspace=workspace, name=save_name, layout_json={})
+                    st.success(t("Layout saved."))
+                    st.rerun()
+            save_as_name = st.text_input(t("Save as"), key=f"layout_save_as_name_{workspace.value}")
+            if st.button(t("Create preset"), key=f"layout_save_as_{workspace.value}"):
+                if save_as_name:
+                    layout_svc.save_as(
+                        actor_id=a.user_id,
+                        workspace=workspace,
+                        source_layout_id=selected.layout_id if selected else None,
+                        new_name=save_as_name,
+                        layout_json={},
+                    )
+                    st.success(t("Layout preset created."))
+                    st.rerun()
+            if selected and st.button(t("Set default"), key=f"layout_set_default_{workspace.value}"):
+                layout_svc.set_default(actor_id=a.user_id, workspace=workspace, layout_id=selected.layout_id)
+                st.success(t("Default layout updated."))
+                st.rerun()
+            if selected and st.button(t("Delete"), key=f"layout_delete_{workspace.value}"):
+                layout_svc.delete(actor_id=a.user_id, workspace=workspace, layout_id=selected.layout_id)
+                st.success(t("Layout deleted."))
+                st.rerun()
+
 
 
 def _t():
@@ -89,7 +149,8 @@ def render_header() -> None:
     with mid:
         # Global context placeholder (ticker/date/workspace)
         st.caption(t("Terminal context"))
-        st.write(f"**{t('Workspace')}**: {a.role.value if a.role else '-'}")
+        st.write(f"**{t('Workspace')}**: {ctx().workspace}")
+        _render_layout_menu(t)
 
     with right:
         lang = st.selectbox(
