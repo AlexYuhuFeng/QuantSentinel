@@ -9,6 +9,7 @@ from quantsentinel.common.config import get_settings
 from quantsentinel.infra.db.engine import db_healthcheck
 from quantsentinel.infra.db.models import UserRole
 from quantsentinel.i18n.gettext import get_translator
+from quantsentinel.services.audit_service import AuditService
 from quantsentinel.services.auth_service import AuthService
 
 from quantsentinel.app.pages import (
@@ -28,6 +29,7 @@ st.set_page_config(page_title="QuantSentinel", layout="wide")
 
 settings = get_settings()
 auth_svc = AuthService()
+audit_svc = AuditService()
 
 
 def _t():
@@ -193,6 +195,136 @@ def render_page(page_key: str) -> None:
         help_page.render()
 
 
+
+
+def _install_palette_shortcut_bridge() -> None:
+    """Capture Ctrl/⌘+K in browser and click hidden Streamlit button."""
+    components.html(
+        """
+        <script>
+          (function () {
+            if (window.__qsPaletteBound) return;
+            window.__qsPaletteBound = true;
+            window.parent.document.addEventListener('keydown', function (e) {
+              if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                const btn = Array.from(window.parent.document.querySelectorAll('button'))
+                  .find((item) => item.textContent && item.textContent.trim() === 'Open Command Palette');
+                if (btn) btn.click();
+              }
+            });
+          })();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
+
+
+def _build_command_palette() -> CommandPalette:
+    def _open_ticker() -> dict[str, str]:
+        open_drawer("instrument", {"ticker": "AAPL"})
+        set_workspace("Market")
+        return {"target": "instrument", "ticker": "AAPL"}
+
+    def _create_rule() -> dict[str, str]:
+        set_workspace("Monitor")
+        open_drawer("rule_create", {"source": "command_palette"})
+        return {"target": "monitor_rule_create"}
+
+    def _run_backtest() -> dict[str, str]:
+        set_workspace("Strategy")
+        open_drawer("backtest", {"source": "command_palette"})
+        return {"target": "strategy_backtest"}
+
+    def _refresh_data() -> dict[str, str]:
+        set_workspace("Market")
+        push_toast("info", "Refresh queued from command palette.")
+        return {"target": "market_refresh"}
+
+    def _export_snapshot() -> dict[str, str]:
+        push_toast("info", "Snapshot export requested from command palette.")
+        return {"target": "snapshot_export"}
+
+    def _go_workspace() -> dict[str, str]:
+        set_workspace("Explore")
+        return {"target": "workspace", "workspace": "Explore"}
+
+    return CommandPalette(
+        [
+            PaletteCommand(
+                id="open_ticker",
+                label="Open ticker",
+                keywords=("instrument", "symbol", "watchlist"),
+                min_role=UserRole.VIEWER,
+                action=_open_ticker,
+            ),
+            PaletteCommand(
+                id="create_rule",
+                label="Create rule",
+                keywords=("alert", "monitor", "policy"),
+                min_role=UserRole.EDITOR,
+                action=_create_rule,
+            ),
+            PaletteCommand(
+                id="run_backtest",
+                label="Run backtest",
+                keywords=("strategy", "simulation", "alpha"),
+                min_role=UserRole.EDITOR,
+                action=_run_backtest,
+            ),
+            PaletteCommand(
+                id="refresh_data",
+                label="Refresh data",
+                keywords=("sync", "reload", "market"),
+                min_role=UserRole.VIEWER,
+                action=_refresh_data,
+            ),
+            PaletteCommand(
+                id="export_snapshot",
+                label="Export snapshot",
+                keywords=("download", "report", "snapshot"),
+                min_role=UserRole.VIEWER,
+                action=_export_snapshot,
+            ),
+            PaletteCommand(
+                id="go_to_workspace",
+                label="Go to workspace",
+                keywords=("navigate", "explore", "switch"),
+                min_role=UserRole.VIEWER,
+                action=_go_workspace,
+            ),
+        ]
+    )
+
+
+def _render_command_palette() -> None:
+    _install_palette_shortcut_bridge()
+    command_palette = _build_command_palette()
+    u = ui()
+
+    if st.button("Open Command Palette", key="open_command_palette", help="Ctrl/⌘+K"):
+        u.command_palette_open = True
+
+    if not u.command_palette_open:
+        return
+
+    with st.container(border=True):
+        st.markdown("### Command Palette")
+
+        def _on_execute(command: PaletteCommand, payload: dict[str, object]) -> None:
+            audit_svc.log_command_palette_execution(
+                actor_id=auth().user_id,
+                command_id=command.id,
+                payload={"label": command.label, **payload},
+            )
+
+        command_palette.show(on_execute=_on_execute)
+        if st.button("Close palette", key="close_command_palette"):
+            u.command_palette_open = False
+            u.command_palette_query = ""
+            st.rerun()
+
 def main() -> None:
     a = auth()
 
@@ -205,6 +337,7 @@ def main() -> None:
     dispatch_shortcut_events()
 
     render_header()
+    _render_command_palette()
     page_key = render_sidebar()
     render_page(page_key)
     render_shortcuts_help_dialog()
