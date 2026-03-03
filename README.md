@@ -430,14 +430,16 @@ UI 必须显示最近任务。
 
 ## 14. 默认管理员账号
 
-> 首次部署建议初始化默认管理员：
+推荐通过环境变量注入默认管理员凭据（`DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_EMAIL` / `DEFAULT_ADMIN_PASSWORD` / `DEFAULT_ADMIN_LANGUAGE`）。
 
-- **username**: `admin`
-- **password**: `Admin@123456`
-- **role**: `Admin`
-- **default_language**: `zh_CN`
-
-⚠️ 请在首次登录后立即修改密码，并在生产环境通过环境变量或安全初始化脚本注入凭据。
+- **开发默认值（未设置环境变量时）**
+  - **username**: `admin`
+  - **email**: `admin@example.com`
+  - **password**: `Admin@123456`
+  - **role**: `Admin`
+  - **default_language**: `zh_CN`
+- **生产环境**：必须覆盖以上默认值，禁止使用开发默认凭据。
+- **安全要求**：首次登录后必须立即修改密码（强制改密流程）。
 
 ---
 
@@ -453,6 +455,16 @@ UI 必须显示最近任务。
 8. 创建并运行规则（Monitor），确认告警与审计日志。
 9. 运行策略/参数搜索（Strategy Lab），查看任务与排行榜。
 10. 导出 Explore 快照，切换语言验证 i18n。
+
+
+### 15.1 凭据来源优先级
+
+默认管理员初始化时，凭据来源按以下优先级生效：
+
+1. 环境变量（`DEFAULT_ADMIN_*`）
+2. Bootstrap fallback（代码内开发默认值）
+
+> 建议：本地开发可直接使用 fallback，生产部署必须通过环境变量显式注入。
 
 ---
 

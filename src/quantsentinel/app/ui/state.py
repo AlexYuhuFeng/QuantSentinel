@@ -38,7 +38,7 @@ class AuthState:
 @dataclass
 class GlobalContext:
     ticker: str | None = None
-    date_range: tuple[str, str] | None = None  # ISO yyyy-mm-dd strings for simplicity
+    date_label: str | None = None
     workspace: Literal["Market", "Explore", "Monitor", "Research", "Strategy"] = "Market"
 
 
@@ -58,6 +58,7 @@ class UIState:
 
     # Toasts / notifications (in-app)
     toast_queue: list[dict[str, Any]] | None = None
+    notifications: list[dict[str, Any]] | None = None
 
 
 def _ensure_defaults() -> None:
@@ -133,6 +134,22 @@ def set_ticker(ticker: str | None) -> None:
     c = ctx()
     c.ticker = ticker
     st.session_state[K_CONTEXT] = c
+
+
+def set_date_label(date_label: str | None) -> None:
+    _ensure_defaults()
+    c = ctx()
+    c.date_label = date_label
+    st.session_state[K_CONTEXT] = c
+
+
+def push_notification(title: str, message: str, *, unread: bool = True) -> None:
+    _ensure_defaults()
+    u = ui()
+    if u.notifications is None:
+        u.notifications = []
+    u.notifications.insert(0, {"title": title, "message": message, "unread": unread})
+    st.session_state[K_UI] = u
 
 
 def open_drawer(kind: str, payload: dict[str, Any] | None = None) -> None:

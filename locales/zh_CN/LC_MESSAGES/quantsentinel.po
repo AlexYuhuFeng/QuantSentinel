@@ -456,266 +456,48 @@ msgstr "在运行研究或告警前请先刷新数据。"
 msgid "Remove"
 msgstr "移除"
 
-msgid "Remove from Watchlist"
-msgstr "从关注列表移除"
-
-msgid "Report an Issue"
-msgstr "报告问题"
-
-msgid "Research"
-msgstr "研究"
-
-msgid "Research Configuration"
-msgstr "研究配置"
-
-msgid "Research Lab"
-msgstr "研究实验室"
-
-msgid "Reset password to default"
-msgstr "重置为默认密码"
-
-msgid "Results"
-msgstr "结果"
-
-msgid "Results Chart"
-msgstr "结果图表"
-
-msgid "Role"
-msgstr "角色"
-
-msgid "Role updated."
-msgstr "角色已更新。"
-
-msgid "Rule"
-msgstr "规则"
-
-msgid "Rule deleted."
-msgstr "规则已删除。"
-
-msgid "Rule Name"
-msgstr "规则名称"
-
-msgid "Rule silenced"
-msgstr "规则已静默"
-
-msgid "Rule Type"
-msgstr "规则类型"
-
-msgid "Rule updated."
-msgstr "规则已更新。"
-
-msgid "Run Backtest"
-msgstr "运行回测"
-
-msgid "Run backtests and analyze strategies against historical data."
-msgstr "运行回测并基于历史数据分析策略。"
-
-msgid "Run Monitor Now"
-msgstr "立即运行监控"
-
-msgid "Save"
-msgstr "保存"
-
-msgid "Scope"
-msgstr "范围"
-
-msgid "Score"
-msgstr "评分"
-
-msgid "Search"
-msgstr "搜索"
-
-msgid "See README and docs folder for detailed usage"
-msgstr "详细使用方式请参阅 README 和 docs 目录"
-
-msgid "Select"
-msgstr "选择"
-
-msgid "Select section"
-msgstr "选择分区"
-
-msgid "Select strategy family"
-msgstr "选择策略族"
-
-msgid "Settings"
-msgstr "设置"
-
-msgid "Show raw data"
-msgstr "显示原始数据"
-
-msgid "Sign In"
-msgstr "登录"
-
-msgid "Sign in"
-msgstr "登录"
-
-msgid "Sign out"
-msgstr "退出登录"
-
-msgid "Sign Out"
-msgstr "退出登录"
-
-msgid "Silence Rule"
-msgstr "静默规则"
-
-msgid "Snapshot export is not yet wired."
-msgstr "快照导出功能尚未接通。"
-
-msgid "Start"
-msgstr "开始"
-
-msgid "Start date"
-msgstr "开始日期"
-
-msgid "Start Date"
-msgstr "开始日期"
-
-msgid "Start date must be before end date"
-msgstr "开始日期必须早于结束日期"
-
-msgid "Starting research..."
-msgstr "正在启动研究..."
-
-msgid "Status"
-msgstr "状态"
-
-msgid "Strategy"
-msgstr "策略"
-
-msgid "Strategy Builder"
-msgstr "策略构建器"
-
-msgid "Strategy Family"
-msgstr "策略族"
-
-msgid "Strategy Lab"
-msgstr "策略实验室"
-
-msgid "Submit"
-msgstr "提交"
-
-msgid "Success"
-msgstr "成功"
-
-msgid "Summary Statistics"
-msgstr "统计摘要"
-
-msgid "Support & Community"
-msgstr "支持与社区"
-
-msgid "System health"
-msgstr "系统健康"
-
-msgid "Task failed"
-msgstr "任务失败"
-
-msgid "Task queued"
-msgstr "任务已排队"
-
-msgid "Task running"
-msgstr "任务运行中"
-
-msgid "Task succeeded"
-msgstr "任务成功"
-
-msgid "Team Edition trading research terminal"
-msgstr "团队版交易研究终端"
-
-msgid "Terminal context"
-msgstr "终端上下文"
-
-msgid "Ticker"
-msgstr "代码"
-
-msgid "Ticker (for strategy)"
-msgstr "策略代码"
-
-msgid "Time"
-msgstr "时间"
-
-msgid "Tip: Use Command Palette (Ctrl/⌘+K) to open tickers quickly."
-msgstr "提示：使用命令面板（Ctrl/⌘+K）可快速打开代码。"
-
-msgid "Tips"
-msgstr "提示"
-
-msgid "Tips & Tricks"
-msgstr "技巧与提示"
-
-msgid "Type"
-msgstr "类型"
-
-msgid "Update"
-msgstr "更新"
-
-msgid "Use Ctrl/⌘+K for Command Palette. Press ? for shortcuts."
-msgstr "使用 Ctrl/⌘+K 打开命令面板，按 ? 查看快捷键。"
-
-msgid "Use GitHub Issues on the repo to report bugs or request features"
-msgstr "请使用仓库的 GitHub Issues 报告缺陷或请求功能。"
-
-msgid "Use multiple filters to narrow down results in tables and logs."
-msgstr "在表格和日志中使用多重筛选可缩小结果范围。"
-
-msgid "Use the search box to quickly find instruments or indicators."
-msgstr "使用搜索框可快速查找标的或指标。"
-
-msgid "User created."
-msgstr "用户已创建。"
-
-msgid "User Guide"
-msgstr "用户指南"
-
-msgid "User is inactive."
-msgstr "用户已停用。"
-
-msgid "User List"
-msgstr "用户列表"
-
-msgid "User updated."
-msgstr "用户已更新。"
-
-msgid "Username"
-msgstr "用户名"
-
-msgid "Username and password are required"
-msgstr "用户名和密码为必填项"
+msgid "Last Close"
+msgstr "Last Close"
+# --- App i18n regression coverage ---
 
 msgid "Username or email"
 msgstr "用户名或邮箱"
 
-msgid "Users"
-msgstr "用户"
+msgid "Sign in"
+msgstr "登录"
 
-msgid "View and manage rules to detect market conditions automatically."
-msgstr "查看并管理用于自动识别市场条件的规则。"
+msgid "Bootstrap admin"
+msgstr "初始化管理员"
 
-msgid "View Chart"
-msgstr "查看图表"
-
-msgid "Visualize price data and derived indicators for any ticker."
-msgstr "可视化任意代码的价格数据与衍生指标。"
-
-msgid "Volume"
-msgstr "成交量"
-
-msgid "Watchlist"
-msgstr "关注列表"
-
-msgid "Watchlist, anomalies, and quick context."
-msgstr "关注列表、异常与快速上下文。"
-
-msgid "Welcome to QuantSentinel! Below are resources to help you use the platform effectively."
-msgstr "欢迎使用 QuantSentinel！以下资源可帮助你高效使用平台。"
-
-msgid "What is an alert rule?"
-msgstr "什么是告警规则？"
+msgid "Terminal context"
+msgstr "终端上下文"
 
 msgid "Workspace"
 msgstr "工作区"
 
-msgid "Workspaces"
-msgstr "工作区"
+msgid "Language"
+msgstr "语言"
 
-msgid "Your watchlist is empty. Add a ticker above."
-msgstr "你的关注列表为空，请在上方添加代码。"
+msgid "Sign out"
+msgstr "退出登录"
+
+msgid "Watchlist, anomalies, and quick context."
+msgstr "关注列表、异常与快速上下文。"
+
+msgid "Export snapshot"
+msgstr "导出快照"
+
+msgid "Snapshot export is not yet wired."
+msgstr "快照导出功能尚未接入。"
+
+msgid "Anomalies"
+msgstr "异常"
+
+msgid "Monitor Alerts"
+msgstr "监控告警"
+
+msgid "Alert Rules"
+msgstr "告警规则"
+
+msgid "Recent Alert Events"
+msgstr "近期告警事件"

@@ -18,6 +18,8 @@ def render_table(
     else:
         df = data
 
+    t = get_translator(auth().language)
+
     total = len(df)
     pages = max(1, (total + page_size - 1) // page_size)
     t = get_translator(auth().language)
