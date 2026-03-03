@@ -3,8 +3,8 @@ from __future__ import annotations
 import streamlit as st
 import streamlit.components.v1 as components
 
-from quantsentinel.app.ui.command_palette import CommandPalette, PaletteCommand
-from quantsentinel.app.ui.state import auth, clear_auth, open_drawer, push_toast, set_authenticated, set_language, set_workspace, ui
+from quantsentinel.app.ui.notifications import render_notifications_control
+from quantsentinel.app.ui.state import auth, clear_auth, ctx, set_authenticated, set_language, set_workspace
 from quantsentinel.common.config import get_settings
 from quantsentinel.infra.db.engine import db_healthcheck
 from quantsentinel.infra.db.models import UserRole
@@ -40,7 +40,7 @@ def _t():
 
 def render_login() -> None:
     t = _t()
-    st.title("QuantSentinel")
+    st.title(t("QuantSentinel"))
     st.caption(t("Team Edition trading research terminal"))
 
     with st.form("login_form", clear_on_submit=False):
@@ -54,10 +54,10 @@ def render_login() -> None:
             # This is safe: it only creates admin if DB has no users.
             try:
                 auth_svc.ensure_default_admin(
-                    username="admin",
-                    email="admin@example.com",
-                    password="admin12345",
-                    default_language=auth().language,
+                    username=settings.default_admin_username,
+                    email=settings.default_admin_email,
+                    password=settings.default_admin_password,
+                    default_language=settings.default_admin_language,
                 )
                 st.success(t("Bootstrap admin created. You can sign in now."))
             except Exception as e:
@@ -65,7 +65,11 @@ def render_login() -> None:
 
     with col2:
         st.info(
-            t("Default bootstrap credentials (after bootstrap): admin / admin12345. Please change password immediately.")
+            t(
+                "Default bootstrap credentials (after bootstrap): "
+                f"{settings.default_admin_username} / {settings.default_admin_password} "
+                f"(language: {settings.default_admin_language}). Please change password immediately."
+            )
         )
 
     if submitted:
@@ -85,19 +89,24 @@ def render_login() -> None:
 def render_header() -> None:
     t = _t()
     a = auth()
+    c = ctx()
 
     left, mid, right = st.columns([1.2, 2.6, 1.2], vertical_alignment="center")
     with left:
-        st.markdown("### QuantSentinel")
+        st.markdown(f"### {t('QuantSentinel')}")
 
     with mid:
-        # Global context placeholder (ticker/date/workspace)
-        st.caption(t("Terminal context"))
-        st.write(f"**{t('Workspace')}**: {a.role.value if a.role else '-'}")
+        ticker_label = c.ticker or "-"
+        date_label = c.date_label or "-"
+        workspace_label = c.workspace or "-"
+        st.caption(t("Ticker | Date | Workspace"))
+        st.write(f"{ticker_label} | {date_label} | {workspace_label}")
 
     with right:
+        render_notifications_control(t)
+
         lang = st.selectbox(
-            t("Language"),
+            t("Language switch"),
             options=["en", "zh_CN"],
             index=0 if a.language == "en" else 1,
             label_visibility="collapsed",
@@ -114,9 +123,8 @@ def render_header() -> None:
                     pass
             st.rerun()
 
-        with st.popover("👤", use_container_width=False):
+        with st.popover(f"👤 {t('User menu')}", use_container_width=False):
             st.write(f"**{a.username or ''}**")
-            st.caption(f"{t('Role')}: {a.role.value if a.role else '-'}")
             if st.button(t("Sign out")):
                 clear_auth()
                 st.rerun()
@@ -324,10 +332,37 @@ def main() -> None:
         render_login()
         return
 
+    register_shortcuts()
+    mount_shortcut_listener()
+    dispatch_shortcut_events()
+
     render_header()
     _render_command_palette()
     page_key = render_sidebar()
     render_page(page_key)
+    render_shortcuts_help_dialog()
+
+
+def _consume_ticker_focus_request() -> None:
+    if not st.session_state.get("qs_ui"):
+        return
+
+    app_ui = st.session_state["qs_ui"]
+    if not app_ui.ticker_focus_requested:
+        return
+
+    components.html(
+        """
+        <script>
+        const root = window.parent.document;
+        const input = root.querySelector('input[aria-label="Ticker"]');
+        if (input) input.focus();
+        </script>
+        """,
+        height=0,
+    )
+    app_ui.ticker_focus_requested = False
+    st.session_state["qs_ui"] = app_ui
 
 
 if __name__ == "__main__":
