@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     app_name: str = "QuantSentinel"
     default_language: str = "en"
 
+    # Bootstrap admin (env-overridable; safe dev defaults)
+    default_admin_username: str = Field("admin", alias="DEFAULT_ADMIN_USERNAME")
+    default_admin_email: str = Field("admin@example.com", alias="DEFAULT_ADMIN_EMAIL")
+    default_admin_password: str = Field("Admin@123456", alias="DEFAULT_ADMIN_PASSWORD")
+    default_admin_language: str = Field("zh_CN", alias="DEFAULT_ADMIN_LANGUAGE")
+
     # -----------------------------
     # Database
     # -----------------------------

@@ -50,10 +50,10 @@ def render_login() -> None:
             # This is safe: it only creates admin if DB has no users.
             try:
                 auth_svc.ensure_default_admin(
-                    username="admin",
-                    email="admin@example.com",
-                    password="admin12345",
-                    default_language=auth().language,
+                    username=settings.default_admin_username,
+                    email=settings.default_admin_email,
+                    password=settings.default_admin_password,
+                    default_language=settings.default_admin_language,
                 )
                 st.success(t("Bootstrap admin created. You can sign in now."))
             except Exception as e:
@@ -61,7 +61,11 @@ def render_login() -> None:
 
     with col2:
         st.info(
-            t("Default bootstrap credentials (after bootstrap): admin / admin12345. Please change password immediately.")
+            t(
+                "Default bootstrap credentials (after bootstrap): "
+                f"{settings.default_admin_username} / {settings.default_admin_password} "
+                f"(language: {settings.default_admin_language}). Please change password immediately."
+            )
         )
 
     if submitted:
