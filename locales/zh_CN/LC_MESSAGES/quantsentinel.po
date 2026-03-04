@@ -637,5 +637,65 @@ msgstr "终端上下文"
 msgid "Workspace"
 msgstr "工作区"
 
-msgid "Role"
-msgstr "角色"
+msgid "Language"
+msgstr "语言"
+
+msgid "Sign out"
+msgstr "退出登录"
+
+msgid "Watchlist, anomalies, and quick context."
+msgstr "关注列表、异常与快速上下文。"
+
+msgid "Export snapshot"
+msgstr "导出快照"
+
+msgid "Snapshot export is not yet wired."
+msgstr "快照导出功能尚未接入。"
+
+msgid "Anomalies"
+msgstr "异常"
+
+msgid "Monitor Alerts"
+msgstr "监控告警"
+
+msgid "Alert Rules"
+msgstr "告警规则"
+
+msgid "Recent Alert Events"
+msgstr "近期告警事件"
+
+msgid "Keyboard shortcuts"
+msgstr "快捷键"
+
+msgid "Shortcut"
+msgstr "快捷键"
+
+msgid "Action"
+msgstr "操作"
+
+msgid "No shortcuts registered."
+msgstr "尚未注册快捷键。"
+
+msgid "No matching commands."
+msgstr "没有匹配的命令。"
+
+msgid "Go to Market workspace"
+msgstr "跳转到市场工作区"
+
+msgid "Go to Explore workspace"
+msgstr "跳转到探索工作区"
+
+msgid "Go to Research workspace"
+msgstr "跳转到研究工作区"
+
+msgid "Go to Strategy workspace"
+msgstr "跳转到策略工作区"
+
+msgid "Focus ticker search"
+msgstr "聚焦到代码搜索框"
+
+msgid "Open shortcuts help"
+msgstr "打开快捷键帮助"
+
+msgid "Open command palette"
+msgstr "打开命令面板"

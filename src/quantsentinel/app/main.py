@@ -168,7 +168,7 @@ def render_header() -> None:
     a = auth()
     c = ctx()
 
-    left, mid, right = st.columns([1.2, 2.6, 1.2], vertical_alignment="center")
+    left, mid, right = st.columns([1.2, 2.6, 1.4], vertical_alignment="center")
     with left:
         st.markdown(f"### {t('QuantSentinel')}")
 
@@ -176,32 +176,34 @@ def render_header() -> None:
         ticker_label = c.ticker or "-"
         date_label = c.date_label or "-"
         workspace_label = c.workspace or "-"
-        st.caption(t("Ticker | Date | Workspace"))
-        st.write(f"{ticker_label} | {date_label} | {workspace_label}")
+        st.write(f"**{ticker_label} | {date_label} | {workspace_label}**")
 
     with right:
-        render_notifications_control(t)
-
-        lang = st.selectbox(
-            t("Language switch"),
-            options=["en", "zh_CN"],
-            index=0 if a.language == "en" else 1,
-            label_visibility="collapsed",
-            key="qs_lang_select",
-        )
-        if lang != a.language:
-            set_language(lang)
-            # Persist preference for logged-in users
-            if a.user_id is not None:
-                with suppress(Exception):
-                    auth_svc.set_default_language(actor_id=a.user_id, user_id=a.user_id, language=lang)
-            st.rerun()
-
-        with st.popover(f"👤 {t('User menu')}", use_container_width=False):
-            st.write(f"**{a.username or ''}**")
-            if st.button(t("Sign out")):
-                clear_auth()
+        notif_col, lang_col, user_col = st.columns([1, 1, 1], vertical_alignment="center")
+        with notif_col:
+            render_notifications_control(t)
+        with lang_col:
+            lang = st.selectbox(
+                t("Language switch"),
+                options=["en", "zh_CN"],
+                index=0 if a.language == "en" else 1,
+                label_visibility="collapsed",
+                key="qs_lang_select",
+            )
+            if lang != a.language:
+                set_language(lang)
+                # Persist preference for logged-in users
+                if a.user_id is not None:
+                    with suppress(Exception):
+                        auth_svc.set_default_language(actor_id=a.user_id, user_id=a.user_id, language=lang)
                 st.rerun()
+
+        with user_col:
+            with st.popover(f"👤 {t('User menu')}", use_container_width=False):
+                st.write(f"**{a.username or ''}**")
+                if st.button(t("Sign out")):
+                    clear_auth()
+                    st.rerun()
 
 
 def render_sidebar() -> str:
@@ -218,6 +220,7 @@ def render_sidebar() -> str:
             ("Monitor", t("Monitor")),
             ("Research", t("Research Lab")),
             ("Strategy", t("Strategy Lab")),
+            ("Help", t("Help")),
         ]
         if a.role == UserRole.ADMIN:
             pages.append(("Admin", t("Admin")))
@@ -265,34 +268,12 @@ def render_page(page_key: str) -> None:
     elif page_key == "Admin":
         set_workspace("Market")
         admin.render()
+    elif page_key == "Help":
+        help_page.render()
     else:
         help_page.render()
 
 
-
-
-def _install_palette_shortcut_bridge() -> None:
-    """Capture Ctrl/⌘+K in browser and click hidden Streamlit button."""
-    components.html(
-        """
-        <script>
-          (function () {
-            if (window.__qsPaletteBound) return;
-            window.__qsPaletteBound = true;
-            window.parent.document.addEventListener('keydown', function (e) {
-              if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-                e.preventDefault();
-                const btn = Array.from(window.parent.document.querySelectorAll('button'))
-                  .find((item) => item.textContent && item.textContent.trim() === 'Open Command Palette');
-                if (btn) btn.click();
-              }
-            });
-          })();
-        </script>
-        """,
-        height=0,
-        width=0,
-    )
 
 
 def _build_command_palette() -> CommandPalette:
@@ -332,6 +313,7 @@ def _build_command_palette() -> CommandPalette:
                 keywords=("instrument", "symbol", "watchlist"),
                 min_role=UserRole.VIEWER,
                 action=_open_ticker,
+                keyword_weights={"symbol": 1.4, "watchlist": 1.1},
             ),
             PaletteCommand(
                 id="create_rule",
@@ -339,6 +321,7 @@ def _build_command_palette() -> CommandPalette:
                 keywords=("alert", "monitor", "policy"),
                 min_role=UserRole.EDITOR,
                 action=_create_rule,
+                keyword_weights={"alert": 1.5, "policy": 1.2},
             ),
             PaletteCommand(
                 id="run_backtest",
@@ -346,6 +329,7 @@ def _build_command_palette() -> CommandPalette:
                 keywords=("strategy", "simulation", "alpha"),
                 min_role=UserRole.EDITOR,
                 action=_run_backtest,
+                keyword_weights={"strategy": 1.4, "simulation": 1.2},
             ),
             PaletteCommand(
                 id="refresh_data",
@@ -353,6 +337,7 @@ def _build_command_palette() -> CommandPalette:
                 keywords=("sync", "reload", "market"),
                 min_role=UserRole.VIEWER,
                 action=_refresh_data,
+                keyword_weights={"sync": 1.3, "reload": 1.3},
             ),
             PaletteCommand(
                 id="export_snapshot",
@@ -360,6 +345,7 @@ def _build_command_palette() -> CommandPalette:
                 keywords=("download", "report", "snapshot"),
                 min_role=UserRole.VIEWER,
                 action=_export_snapshot,
+                keyword_weights={"report": 1.3, "snapshot": 1.4},
             ),
             PaletteCommand(
                 id="go_to_workspace",
@@ -367,13 +353,13 @@ def _build_command_palette() -> CommandPalette:
                 keywords=("navigate", "explore", "switch"),
                 min_role=UserRole.VIEWER,
                 action=_go_workspace,
+                keyword_weights={"navigate": 1.3, "switch": 1.1},
             ),
         ]
     )
 
 
 def _render_command_palette() -> None:
-    _install_palette_shortcut_bridge()
     command_palette = _build_command_palette()
     u = ui()
 
@@ -390,7 +376,7 @@ def _render_command_palette() -> None:
             audit_svc.log_command_palette_execution(
                 actor_id=auth().user_id,
                 command_id=command.id,
-                payload={"label": command.label, **payload},
+                payload={"label": command.label, "actor_id": str(auth().user_id), **payload},
             )
 
         command_palette.show(on_execute=_on_execute)

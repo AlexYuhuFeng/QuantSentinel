@@ -577,64 +577,26 @@ msgstr "Tips & Tricks"
 msgid "Use Ctrl/⌘+K for Command Palette. Press ? for shortcuts."
 msgstr "Use Ctrl/⌘+K for Command Palette. Press ? for shortcuts."
 
-msgid "Use the search box to quickly find instruments or indicators."
-msgstr "Use the search box to quickly find instruments or indicators."
+msgid "No matching commands."
+msgstr "No matching commands."
 
-msgid "User management is available in service-backed deployments."
-msgstr "User management is available in service-backed deployments."
+msgid "Go to Market workspace"
+msgstr "Go to Market workspace"
 
-msgid "User menu"
-msgstr "User menu"
+msgid "Go to Explore workspace"
+msgstr "Go to Explore workspace"
 
-msgid "Username or email"
-msgstr "Username or email"
+msgid "Go to Research workspace"
+msgstr "Go to Research workspace"
 
-msgid "Users"
-msgstr "Users"
+msgid "Go to Strategy workspace"
+msgstr "Go to Strategy workspace"
 
-msgid "Variables: close, ret, vol, z, ma20, ma60"
-msgstr "Variables: close, ret, vol, z, ma20, ma60"
+msgid "Focus ticker search"
+msgstr "Focus ticker search"
 
-msgid "View Logs"
-msgstr "View Logs"
+msgid "Open shortcuts help"
+msgstr "Open shortcuts help"
 
-msgid "View and manage rules to detect market conditions automatically."
-msgstr "View and manage rules to detect market conditions automatically."
-
-msgid "Visualize price data and derived indicators for any ticker."
-msgstr "Visualize price data and derived indicators for any ticker."
-
-msgid "Vol Threshold"
-msgstr "Vol Threshold"
-
-msgid "Watchlist"
-msgstr "Watchlist"
-
-msgid "Watchlist, anomalies, and quick context."
-msgstr "Watchlist, anomalies, and quick context."
-
-msgid "Workspace guides and FAQs"
-msgstr "Workspace guides and FAQs"
-
-msgid "Workspaces"
-msgstr "Workspaces"
-
-msgid "Your watchlist is empty. Add a ticker above."
-msgstr "Your watchlist is empty. Add a ticker above."
-
-msgid "Z Threshold"
-msgstr "Z Threshold"
-
-msgid "e.g. CL=F, NG=F, AAPL"
-msgstr "e.g. CL=F, NG=F, AAPL"
-msgid "Language"
-msgstr "Language"
-
-msgid "Terminal context"
-msgstr "Terminal context"
-
-msgid "Workspace"
-msgstr "Workspace"
-
-msgid "Role"
-msgstr "Role"
+msgid "Open command palette"
+msgstr "Open command palette"

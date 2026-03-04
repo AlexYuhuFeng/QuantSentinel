@@ -53,6 +53,44 @@ QuantSentinel 面向以下用户角色：
 - 测试覆盖率硬门禁：
   - `domain + services` **line coverage >= 90%**
 
+
+### 2.4 CI 最终门禁
+
+仓库提供统一门禁命令：
+
+```bash
+make ci
+```
+
+该门禁串行执行：
+
+1. `ruff check .`
+2. `pytest --cov=src/quantsentinel/domain --cov=src/quantsentinel/services`
+
+其中覆盖率按 `domain + services` 统计，并设置硬门禁 `line >= 90%`。
+
+也可单独运行覆盖率拆分检查：
+
+```bash
+make coverage-domain-services
+```
+
+### 2.5 测试矩阵（最小集合）
+
+- Unit：
+  - 指标计算
+  - 8 策略族
+  - 7 规则
+  - 表达式安全
+  - walk-forward
+  - score 稳定性
+- Integration：
+  - DB 迁移
+  - Celery enqueue
+  - RBAC gating
+  - i18n 切换
+  - layout preset 保存/加载
+
 ---
 
 ## 3. 终端 UI/UX 规范（Trading Terminal 风格）
@@ -471,15 +509,14 @@ UI 必须显示最近任务。
 
 1. setup Python 3.12
 2. install dev dependencies
-3. `make i18n-check`
-4. `make lint && make test`
+3. `make ci`（统一执行 `make lint`、`make test`、`make i18n-check`）
 
 ---
 
 ## 13.3 开发环境版本基线
 
 - 开发环境 Python 版本：**3.12+**。
-- CI 固定使用 Python `3.12`（见 `.github/workflows/ci.yml`）。
+- CI 固定使用 Python `3.12`（见 `.github/workflows/ci.yml`），本地开发需保持 **3.12+**。
 - 本地建议通过 `.python-version`（仓库已提供）或容器化开发，避免团队成员版本漂移。
 
 ---
@@ -526,12 +563,10 @@ UI 必须显示最近任务。
 
 ## 15.2 基线自检（PR 前必跑）
 
-建议在提交 PR 前，至少执行以下命令：
+建议在提交 PR 前，先执行统一自检命令：
 
-1. `make i18n-check`
-2. `make i18n-build`
-3. `make lint`
-4. `make test`
+1. `make lint && make test && make i18n-check`
+2. 如涉及翻译改动，再执行：`make i18n-build`
 
 ---
 
@@ -566,3 +601,27 @@ Generate a revision:
 
 Apply migrations:
   alembic upgrade head
+
+---
+
+## 8. 一键验收脚本（Docker Compose）
+
+在 `docker compose up -d` 后，可使用以下命令串行验收关键流程：
+
+```bash
+make acceptance
+# 或
+bash scripts/acceptance_oneclick.sh
+```
+
+脚本覆盖的验收路径包含：
+
+- `docker compose up -d` 启动依赖
+- 登录 Admin（默认管理员引导）
+- 导入数据
+- 运行规则/策略
+- 导出快照
+- 切换语言（i18n）
+- 使用快捷键与 Command Palette
+- 保存布局并重新加载
+- 查看任务日志 / Celery 入队
