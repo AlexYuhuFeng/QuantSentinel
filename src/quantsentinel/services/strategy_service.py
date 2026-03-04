@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from statistics import mean, pstdev
 from typing import Any
 
+from quantsentinel.services.lab_contracts import LabResultView
+
 Runner = Callable[[Mapping[str, Any]], dict[str, Any]]
 
 _STRATEGY_FAMILIES = (
@@ -19,6 +21,17 @@ _STRATEGY_FAMILIES = (
     "vol_breakout",
     "zscore_mean_revert",
 )
+
+_DEFAULT_PARAMS: dict[str, dict[str, Any]] = {
+    "carry_proxy": {"signal": 1.0, "returns": [0.01, -0.005, 0.007, 0.003]},
+    "donchian_breakout": {"signal": 1.0, "returns": [0.012, -0.004, 0.009, 0.002]},
+    "ma_crossover": {"signal": 1.0, "returns": [0.01, -0.002, 0.006, 0.004]},
+    "pairs_spread_mr": {"signal": -0.8, "returns": [0.006, -0.003, 0.005, 0.002]},
+    "rsi_mean_revert": {"signal": -1.0, "returns": [0.007, -0.006, 0.008, 0.001]},
+    "seasonal_bias": {"signal": 0.6, "returns": [0.005, -0.001, 0.004, 0.003]},
+    "vol_breakout": {"signal": 1.1, "returns": [0.015, -0.01, 0.011, 0.006]},
+    "zscore_mean_revert": {"signal": -0.9, "returns": [0.008, -0.007, 0.009, 0.002]},
+}
 
 
 @dataclass
@@ -41,6 +54,29 @@ class StrategyService:
     @property
     def families(self) -> tuple[str, ...]:
         return _STRATEGY_FAMILIES
+
+    def available_families(self) -> tuple[str, ...]:
+        return self.families
+
+    def default_params(self, *, family: str) -> dict[str, Any]:
+        if family not in self._runners:
+            raise ValueError(f"Unknown strategy family: {family}")
+        return dict(_DEFAULT_PARAMS[family])
+
+    def get_recent_results(self, *, limit: int = 20) -> list[LabResultView]:
+        if limit <= 0:
+            return []
+        recent = list(reversed(self._artifacts))[:limit]
+        return [
+            LabResultView(
+                family=str(artifact.get("family", "unknown")),
+                ticker=str(artifact.get("ticker", "N/A")),
+                params_json=dict(artifact.get("params", {})),
+                metrics_json=dict(artifact.get("metrics", {})),
+                score=float(artifact.get("score", 0.0)),
+            )
+            for artifact in recent
+        ]
 
     def register_family_runner(self, family: str, runner: Runner) -> None:
         if family not in self._runners:

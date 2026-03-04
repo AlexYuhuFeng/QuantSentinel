@@ -7,6 +7,38 @@ from statistics import mean, pstdev
 from typing import Any
 from uuid import uuid4
 
+from quantsentinel.services.lab_contracts import LabResultView
+
+_RESEARCH_FAMILIES = (
+    "walk_forward",
+    "regime_sensitivity",
+    "cost_stress",
+)
+
+_RESEARCH_DEFAULT_PARAMS: dict[str, dict[str, Any]] = {
+    "walk_forward": {
+        "folds": 4,
+        "trading_cost_bps": 3.0,
+        "slippage_bps": 2.0,
+        "max_position": 1.0,
+        "max_drawdown_limit": 0.2,
+    },
+    "regime_sensitivity": {
+        "folds": 3,
+        "trading_cost_bps": 5.0,
+        "slippage_bps": 3.0,
+        "max_position": 0.8,
+        "max_drawdown_limit": 0.18,
+    },
+    "cost_stress": {
+        "folds": 5,
+        "trading_cost_bps": 8.0,
+        "slippage_bps": 5.0,
+        "max_position": 0.7,
+        "max_drawdown_limit": 0.25,
+    },
+}
+
 
 @dataclass
 class ResearchRun:
@@ -29,6 +61,38 @@ class ResearchService:
 
     def __init__(self) -> None:
         self._projects: dict[str, ResearchProject] = {}
+
+    def available_families(self) -> tuple[str, ...]:
+        return _RESEARCH_FAMILIES
+
+    def default_params(self, *, family: str) -> dict[str, Any]:
+        if family not in _RESEARCH_DEFAULT_PARAMS:
+            raise ValueError(f"Unknown research family: {family}")
+        return dict(_RESEARCH_DEFAULT_PARAMS[family])
+
+    def get_recent_results(self, *, limit: int = 10) -> list[LabResultView]:
+        if limit <= 0:
+            return []
+
+        results: list[LabResultView] = []
+        for project in self._projects.values():
+            for run in project.runs:
+                results.append(
+                    LabResultView(
+                        family="walk_forward",
+                        ticker=project.name,
+                        params_json={},
+                        metrics_json={
+                            "avg_net_pnl": float(run.summary.get("avg_net_pnl", 0.0)),
+                            "total_net_pnl": float(run.summary.get("total_net_pnl", 0.0)),
+                            "worst_drawdown": float(run.summary.get("worst_drawdown", 0.0)),
+                            "stability": float(run.summary.get("stability", 0.0)),
+                        },
+                        score=float(run.summary.get("stability", 0.0)),
+                    )
+                )
+
+        return list(reversed(results))[:limit]
 
     def create_project(self, *, name: str, metadata: dict[str, Any] | None = None) -> ResearchProject:
         if not name.strip():
