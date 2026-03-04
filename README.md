@@ -53,6 +53,27 @@ QuantSentinel 面向以下用户角色：
 - 测试覆盖率硬门禁：
   - `domain + services` **line coverage >= 90%**
 
+
+### 2.4 CI 最终门禁
+
+仓库提供统一门禁命令：
+
+```bash
+make ci
+```
+
+该门禁串行执行：
+
+1. `ruff check .`
+2. `pytest` 全量测试
+3. 覆盖率拆分校验：`domain + services` line coverage >= 90%
+
+也可单独运行覆盖率拆分检查：
+
+```bash
+make coverage-domain-services
+```
+
 ---
 
 ## 3. 终端 UI/UX 规范（Trading Terminal 风格）
@@ -518,3 +539,25 @@ Generate a revision:
 
 Apply migrations:
   alembic upgrade head
+
+---
+
+## 8. 一键验收脚本（Docker Compose）
+
+在 `docker compose up -d` 后，可使用以下命令串行验收关键流程：
+
+```bash
+make acceptance
+# 或
+bash scripts/acceptance_oneclick.sh
+```
+
+脚本覆盖的验收路径包含：
+
+- 登录（默认管理员引导）
+- 导入 / 规则 / 策略 / 导出相关集成路径（通过 smoke + integration 用例）
+- 语言切换（i18n）
+- 快捷键
+- 命令面板
+- 布局保存/加载
+- 任务日志/入队
