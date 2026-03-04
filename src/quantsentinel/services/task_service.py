@@ -15,9 +15,10 @@ from datetime import datetime, timezone
 from typing import Any
 
 from quantsentinel.infra.db.engine import session_scope
-from quantsentinel.infra.db.models import TaskStatus
+from quantsentinel.infra.db.models import TaskStatus, UserRole
 from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
 from quantsentinel.infra.db.repos.tasks_repo import TasksRepo
+from quantsentinel.services.rbac_service import AuditActionType, RBACService
 
 
 def _now() -> datetime:
@@ -51,6 +52,8 @@ class TaskService:
         actor_id: uuid.UUID | None,
         celery_signature: str | None = None,
         celery_args: dict[str, Any] | None = None,
+        actor_role: UserRole | None = None,
+        workspace: str = "Monitor",
     ) -> uuid.UUID:
         """
         Create a Task record and (best-effort) enqueue a Celery job.
@@ -63,6 +66,8 @@ class TaskService:
             task_id (UUID)
         """
         celery_args = celery_args or {}
+        if actor_id is not None:
+            RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace=workspace, action=AuditActionType.RUN)
         now = _now()
 
         with session_scope() as session:

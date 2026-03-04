@@ -25,6 +25,7 @@ from quantsentinel.infra.db.engine import session_scope
 from quantsentinel.infra.db.models import User, UserRole
 from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
 from quantsentinel.infra.db.repos.users_repo import UserCreate, UsersRepo
+from quantsentinel.services.rbac_service import RBACService
 
 
 @dataclass(frozen=True)
@@ -272,11 +273,11 @@ class AuthService:
 
     @staticmethod
     def can_manage_users(role: UserRole) -> bool:
-        return role == UserRole.ADMIN
+        return RBACService.can_manage_users(role)
 
     @staticmethod
     def can_edit(role: UserRole) -> bool:
-        return role in (UserRole.ADMIN, UserRole.EDITOR)
+        return RBACService.can_mutate_workspace(role, "Market")
 
     @staticmethod
     def can_view(role: UserRole) -> bool:

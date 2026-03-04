@@ -147,12 +147,14 @@ def test_command_execution_writes_audit_log_record() -> None:
     audit_module.AuditService().log_command_palette_execution(
         actor_id=actor_id,
         command_id="refresh_data",
-        payload={"source": "integration_test"},
+        payload={"source": "integration_test", "action_type": "run", "result": {"target": "market_refresh"}},
     )
 
     assert len(writes) == 1
     assert writes[0].payload["command_id"] == "refresh_data"
     assert writes[0].payload["actor_id"] == str(actor_id)
+    assert writes[0].payload["action_type"] == "run"
+    assert writes[0].payload["result"]["target"] == "market_refresh"
 
 
 def test_shortcut_events_change_workspace_and_dialog_state() -> None:

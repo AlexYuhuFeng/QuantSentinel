@@ -10,13 +10,14 @@ from quantsentinel.domain.alerts.expression import evaluate
 from quantsentinel.domain.alerts.governance import resolve_aggregation_key, should_dedup, should_silence
 from quantsentinel.domain.alerts.models import GovernancePolicy
 from quantsentinel.infra.db.engine import session_scope
-from quantsentinel.infra.db.models import AlertEventStatus, AlertRule
+from quantsentinel.infra.db.models import AlertEventStatus, AlertRule, UserRole
 from quantsentinel.infra.db.repos.alerts_repo import AlertRuleCreate, AlertRuleUpdate, AlertsRepo
 from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
 from quantsentinel.infra.db.repos.events_repo import EventsRepo
 from quantsentinel.infra.db.repos.instruments_repo import InstrumentsRepo
 from quantsentinel.infra.db.repos.prices_repo import PricesRepo
 from quantsentinel.services.task_service import TaskService
+from quantsentinel.services.rbac_service import AuditActionType, RBACService
 
 
 def _now() -> datetime:
@@ -81,7 +82,8 @@ class AlertsService:
         with session_scope() as session:
             return EventsRepo(session).list_recent(limit=limit)
 
-    def create_rule(self, *, actor_id: uuid.UUID | None, payload: AlertRuleCreate) -> uuid.UUID:
+    def create_rule(self, *, actor_id: uuid.UUID | None, payload: AlertRuleCreate, actor_role: UserRole | None = None) -> uuid.UUID:
+        RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace="Monitor", action=AuditActionType.CREATE)
         self._validate_rule_payload(payload.rule_type, payload.params_json or {})
         with session_scope() as session:
             repo = AlertsRepo(session)
@@ -96,7 +98,8 @@ class AlertsService:
             )
             return rule_id
 
-    def update_rule(self, *, actor_id: uuid.UUID | None, rule_id: uuid.UUID, payload: AlertRuleUpdate) -> None:
+    def update_rule(self, *, actor_id: uuid.UUID | None, rule_id: uuid.UUID, payload: AlertRuleUpdate, actor_role: UserRole | None = None) -> None:
+        RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace="Monitor", action=AuditActionType.UPDATE)
         with session_scope() as session:
             AlertsRepo(session).update_rule(rule_id=rule_id, payload=payload)
             self._write_audit(
@@ -108,7 +111,8 @@ class AlertsService:
                 payload={"fields": [k for k, v in payload.__dict__.items() if v is not None]},
             )
 
-    def delete_rule(self, *, rule_id: uuid.UUID, actor_id: uuid.UUID | None = None) -> None:
+    def delete_rule(self, *, rule_id: uuid.UUID, actor_id: uuid.UUID | None = None, actor_role: UserRole | None = None) -> None:
+        RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace="Monitor", action=AuditActionType.DELETE)
         with session_scope() as session:
             AlertsRepo(session).delete_rule(rule_id=rule_id)
             self._write_audit(
@@ -120,7 +124,8 @@ class AlertsService:
                 payload={},
             )
 
-    def set_rule_enabled(self, *, rule_id: uuid.UUID, enabled: bool, actor_id: uuid.UUID | None = None) -> None:
+    def set_rule_enabled(self, *, rule_id: uuid.UUID, enabled: bool, actor_id: uuid.UUID | None = None, actor_role: UserRole | None = None) -> None:
+        RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace="Monitor", action=AuditActionType.UPDATE)
         with session_scope() as session:
             AlertsRepo(session).set_rule_enabled(rule_id=rule_id, enabled=enabled)
             self._write_audit(
@@ -132,7 +137,8 @@ class AlertsService:
                 payload={"enabled": enabled},
             )
 
-    def set_rule_silenced(self, *, rule_id: uuid.UUID, duration_minutes: int, actor_id: uuid.UUID | None = None) -> None:
+    def set_rule_silenced(self, *, rule_id: uuid.UUID, duration_minutes: int, actor_id: uuid.UUID | None = None, actor_role: UserRole | None = None) -> None:
+        RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace="Monitor", action=AuditActionType.UPDATE)
         until = _now() + timedelta(minutes=max(duration_minutes, 1))
         with session_scope() as session:
             AlertsRepo(session).set_rule_silenced_until(rule_id=rule_id, silenced_until=until)
@@ -145,7 +151,8 @@ class AlertsService:
                 payload={"silenced_until": until.isoformat()},
             )
 
-    def ack_event(self, *, event_id: uuid.UUID, actor_id: uuid.UUID | None = None) -> None:
+    def ack_event(self, *, event_id: uuid.UUID, actor_id: uuid.UUID | None = None, actor_role: UserRole | None = None) -> None:
+        RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace="Monitor", action=AuditActionType.ACK)
         actor = actor_id or uuid.UUID("00000000-0000-0000-0000-000000000000")
         with session_scope() as session:
             EventsRepo(session).ack(event_id=event_id, actor_id=actor)

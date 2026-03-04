@@ -12,12 +12,14 @@ from quantsentinel.app.ui.layout import render_workspace_shell
 from quantsentinel.app.ui.state import auth, open_drawer
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.market_service import MarketService
+from quantsentinel.services.rbac_service import RBACService
 
 
 def render() -> None:
     svc = MarketService()
     t = get_translator(auth().language)
     page_state: dict[str, object] = {"query": "", "refresh": False, "export": False}
+    can_mutate = auth().role is not None and RBACService.can_mutate_workspace(auth().role, "Market")
 
     def _render_toolbar() -> None:
         left, mid, right = st.columns([1.4, 2.2, 1.4], vertical_alignment="center")
@@ -34,9 +36,13 @@ def render() -> None:
         with right:
             a, b = st.columns(2)
             with a:
-                page_state["refresh"] = st.button(t("Refresh"), use_container_width=True)
+                if can_mutate:
+                    page_state["refresh"] = st.button(t("Refresh"), use_container_width=True)
             with b:
-                page_state["export"] = st.button(t("Export snapshot"), use_container_width=True)
+                if can_mutate:
+                    page_state["export"] = st.button(t("Export snapshot"), use_container_width=True)
+        if not can_mutate:
+            st.caption(t("Viewer mode: read-only."))
 
     def _render_main() -> None:
         refresh = bool(page_state["refresh"])
@@ -45,7 +51,7 @@ def render() -> None:
 
         if refresh:
             try:
-                svc.refresh_watchlist_async()
+                svc.refresh_watchlist_async(actor_id=auth().user_id, actor_role=auth().role)
                 render_success_state(t("Refresh queued."))
             except Exception as e:
                 render_error_state(f"{t('Failed to queue refresh')}: {e}", key_prefix="market_refresh_error")
@@ -55,9 +61,9 @@ def render() -> None:
         if query.strip():
             add_l, add_r = st.columns([1, 5], vertical_alignment="center")
             with add_l:
-                if st.button(t("Add"), type="primary"):
+                if can_mutate and st.button(t("Add"), type="primary"):
                     try:
-                        svc.add_to_watchlist(ticker=query.strip())
+                        svc.add_to_watchlist(ticker=query.strip(), actor_id=auth().user_id, actor_role=auth().role)
                         st.success(t("Added to watchlist."))
                         st.rerun()
                     except Exception as e:

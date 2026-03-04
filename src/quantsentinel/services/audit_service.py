@@ -7,6 +7,7 @@ from typing import Any
 
 from quantsentinel.infra.db.engine import session_scope
 from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
+from quantsentinel.services.rbac_service import AuditActionType
 
 
 @dataclass(frozen=True)
@@ -29,16 +30,19 @@ class AuditService:
     ) -> None:
         with session_scope() as session:
             repo = AuditRepo(session)
+            normalized_payload = dict(payload or {})
+            action_type = str(normalized_payload.get("action_type", AuditActionType.RUN.value)).lower()
+            if action_type not in {item.value for item in AuditActionType}:
+                action_type = AuditActionType.RUN.value
+            normalized_payload["action_type"] = action_type
+            normalized_payload.setdefault("command_id", command_id)
+            normalized_payload.setdefault("actor_id", str(actor_id) if actor_id is not None else None)
             repo.write(
                 AuditEntryCreate(
                     action="command_palette_execute",
                     entity_type="command_palette",
                     entity_id=command_id,
-                    payload={
-                        "command_id": command_id,
-                        "actor_id": str(actor_id) if actor_id is not None else None,
-                        **(payload or {}),
-                    },
+                    payload=normalized_payload,
                     actor_id=actor_id,
                 )
             )

@@ -16,6 +16,7 @@ from quantsentinel.app.ui.state import app_state, auth, push_toast
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.explore_service import ExploreService
 from quantsentinel.services.market_service import MarketService
+from quantsentinel.services.rbac_service import RBACService
 
 
 def render() -> None:
@@ -23,6 +24,7 @@ def render() -> None:
     state = app_state()
     svc_market = MarketService()
     svc_explore = ExploreService()
+    can_mutate = auth().role is not None and RBACService.can_mutate_workspace(auth().role, "Explore")
 
     def _refresh_data() -> None:
         try:
@@ -54,8 +56,10 @@ def render() -> None:
             )
         with c3:
             state["explore_end"] = st.date_input(t("End date"), value=state.get("explore_end", date.today()))
-        if st.button(t("Refresh"), use_container_width=True):
+        if can_mutate and st.button(t("Refresh"), use_container_width=True):
             _refresh_data()
+        if not can_mutate:
+            st.caption(t("Viewer mode: read-only."))
 
     def _render_main() -> None:
         price_df = state.get("explore_data")

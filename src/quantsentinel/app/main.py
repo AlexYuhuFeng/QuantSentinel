@@ -42,6 +42,7 @@ from quantsentinel.infra.db.models import LayoutWorkspace, UserRole
 from quantsentinel.services.audit_service import AuditService
 from quantsentinel.services.auth_service import AuthService
 from quantsentinel.services.layout_service import LayoutService
+from quantsentinel.services.rbac_service import AuditActionType, RBACService
 
 # -----------------------------
 # App config
@@ -213,16 +214,20 @@ def render_sidebar() -> str:
         st.markdown("## " + t("Navigation"))
 
         # Role-based visibility
-        pages = [
+        all_pages = [
             ("Market", t("Market")),
             ("Explore", t("Explore")),
             ("Monitor", t("Monitor")),
             ("Research", t("Research Lab")),
             ("Strategy", t("Strategy Lab")),
+            ("Admin", t("Admin")),
             ("Help", t("Help")),
         ]
-        if a.role == UserRole.ADMIN:
-            pages.append(("Admin", t("Admin")))
+        pages = [
+            (key, label)
+            for key, label in all_pages
+            if key == "Help" or (a.role is not None and RBACService.can_view_workspace(a.role, key))
+        ]
 
         label_to_key = {label: key for key, label in pages}
         selected_label = st.radio(
@@ -314,6 +319,7 @@ def _build_command_palette() -> CommandPalette:
                 min_role=UserRole.VIEWER,
                 action=_open_ticker,
                 keyword_weights={"symbol": 1.4, "watchlist": 1.1},
+                action_type=AuditActionType.UPDATE,
             ),
             PaletteCommand(
                 id="create_rule",
@@ -322,6 +328,7 @@ def _build_command_palette() -> CommandPalette:
                 min_role=UserRole.EDITOR,
                 action=_create_rule,
                 keyword_weights={"alert": 1.5, "policy": 1.2},
+                action_type=AuditActionType.CREATE,
             ),
             PaletteCommand(
                 id="run_backtest",
@@ -330,6 +337,7 @@ def _build_command_palette() -> CommandPalette:
                 min_role=UserRole.EDITOR,
                 action=_run_backtest,
                 keyword_weights={"strategy": 1.4, "simulation": 1.2},
+                action_type=AuditActionType.RUN,
             ),
             PaletteCommand(
                 id="refresh_data",
@@ -338,6 +346,7 @@ def _build_command_palette() -> CommandPalette:
                 min_role=UserRole.VIEWER,
                 action=_refresh_data,
                 keyword_weights={"sync": 1.3, "reload": 1.3},
+                action_type=AuditActionType.RUN,
             ),
             PaletteCommand(
                 id="export_snapshot",
@@ -346,6 +355,7 @@ def _build_command_palette() -> CommandPalette:
                 min_role=UserRole.VIEWER,
                 action=_export_snapshot,
                 keyword_weights={"report": 1.3, "snapshot": 1.4},
+                action_type=AuditActionType.EXPORT,
             ),
             PaletteCommand(
                 id="go_to_workspace",
@@ -354,6 +364,7 @@ def _build_command_palette() -> CommandPalette:
                 min_role=UserRole.VIEWER,
                 action=_go_workspace,
                 keyword_weights={"navigate": 1.3, "switch": 1.1},
+                action_type=AuditActionType.RUN,
             ),
         ]
     )
@@ -377,7 +388,13 @@ def _render_command_palette() -> None:
             audit_svc.log_command_palette_execution(
                 actor_id=auth().user_id,
                 command_id=command.id,
-                payload={"label": command.label, "actor_id": str(auth().user_id), **payload},
+                payload={
+                    "label": command.label,
+                    "actor_id": str(auth().user_id),
+                    "action_type": command.action_type.value,
+                    "workspace": ctx().workspace,
+                    "result": payload,
+                },
             )
 
         command_palette.show(on_execute=_on_execute)
