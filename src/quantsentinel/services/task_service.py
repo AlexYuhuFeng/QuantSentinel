@@ -33,6 +33,8 @@ class TaskSummary:
     created_at: datetime
     updated_at: datetime
     detail: str | None
+    started_at: datetime | None
+    finished_at: datetime | None
     actor_id: uuid.UUID | None
 
 
@@ -121,6 +123,8 @@ class TaskService:
                     created_at=r.created_at,
                     updated_at=r.updated_at,
                     detail=r.detail,
+                    started_at=r.started_at,
+                    finished_at=r.finished_at,
                     actor_id=r.actor_id,
                 )
                 for r in rows
@@ -140,6 +144,8 @@ class TaskService:
                 created_at=r.created_at,
                 updated_at=r.updated_at,
                 detail=r.detail,
+                started_at=r.started_at,
+                finished_at=r.finished_at,
                 actor_id=r.actor_id,
             )
 
