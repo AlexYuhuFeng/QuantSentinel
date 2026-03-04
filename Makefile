@@ -6,7 +6,7 @@ lint:
 	ruff check .
 
 test:
-	PYTHONPATH=src pytest -q --cov=src/quantsentinel --cov-report=term-missing
+	PYTHONPATH=src pytest -q --cov=src/quantsentinel/domain --cov=src/quantsentinel/services --cov-report=term
 
 i18n-check:
 	python scripts/check_missing_translations.py $(PO_FILE)
@@ -16,7 +16,7 @@ i18n-build:
 	pybabel compile -d locales -D quantsentinel
 
 coverage-domain-services:
-	PYTHONPATH=src pytest -q --cov=src/quantsentinel --cov-report=json --cov-report=term-missing
+	PYTHONPATH=src pytest -q --cov=src/quantsentinel/domain --cov=src/quantsentinel/services --cov-report=json:coverage.json --cov-report=term
 	python scripts/check_domain_services_coverage.py --report coverage.json --min 90
 
 ci:

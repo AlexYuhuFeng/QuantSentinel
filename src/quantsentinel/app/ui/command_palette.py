@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from difflib import SequenceMatcher
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import streamlit as st
 
 from quantsentinel.app.ui.state import auth, ui
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.infra.db.models import UserRole
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _ROLE_WEIGHT = {
     UserRole.VIEWER: 1,

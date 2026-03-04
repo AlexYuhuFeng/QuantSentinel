@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-import uuid
+from typing import TYPE_CHECKING
 
 import streamlit as st
 
-from quantsentinel.app.ui.components import render_empty_state, render_error_state, render_success_state
+from quantsentinel.app.ui.components import (
+    render_empty_state,
+    render_error_state,
+    render_success_state,
+)
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
 from quantsentinel.app.ui.state import auth, push_toast
@@ -14,6 +18,9 @@ from quantsentinel.infra.db.repos.alerts_repo import AlertRuleCreate
 from quantsentinel.services.alerts_service import AlertsService
 from quantsentinel.services.notification_service import NotificationPayload, NotificationService
 from quantsentinel.services.task_service import TaskService
+
+if TYPE_CHECKING:
+    import uuid
 
 
 def render() -> None:
@@ -126,7 +133,7 @@ def _render_params_by_type(t) -> None:
         st.number_input(t("Lookback"), min_value=5, value=20, key="wizard_lookback")
         st.number_input(t("Min Correlation"), min_value=-1.0, max_value=1.0, value=0.2, key="wizard_min_corr")
     elif rule_type == "custom_expression":
-        st.text_input(t("Expression"), key="wizard_expression", help="Variables: close, ret, vol, z, ma20, ma60")
+        st.text_input(t("Expression"), key="wizard_expression", help=t("Variables: close, ret, vol, z, ma20, ma60"))
 
 
 def _validate_wizard_inputs() -> str | None:

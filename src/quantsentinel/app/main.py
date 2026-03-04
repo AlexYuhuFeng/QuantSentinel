@@ -198,12 +198,11 @@ def render_header() -> None:
                         auth_svc.set_default_language(actor_id=a.user_id, user_id=a.user_id, language=lang)
                 st.rerun()
 
-        with user_col:
-            with st.popover(f"👤 {t('User menu')}", use_container_width=False):
-                st.write(f"**{a.username or ''}**")
-                if st.button(t("Sign out")):
-                    clear_auth()
-                    st.rerun()
+        with user_col, st.popover(f"👤 {t('User menu')}", use_container_width=False):
+            st.write(f"**{a.username or ''}**")
+            if st.button(t("Sign out")):
+                clear_auth()
+                st.rerun()
 
 
 def render_sidebar() -> str:
@@ -362,15 +361,16 @@ def _build_command_palette() -> CommandPalette:
 def _render_command_palette() -> None:
     command_palette = _build_command_palette()
     u = ui()
+    t = get_translator(auth().language)
 
-    if st.button("Open Command Palette", key="open_command_palette", help="Ctrl/⌘+K"):
+    if st.button(t("Open Command Palette"), key="open_command_palette", help=t("Ctrl/⌘+K")):
         u.command_palette_open = True
 
     if not u.command_palette_open:
         return
 
     with st.container(border=True):
-        st.markdown("### Command Palette")
+        st.markdown(f"### {t('Command Palette')}")
 
         def _on_execute(command: PaletteCommand, payload: dict[str, object]) -> None:
             audit_svc.log_command_palette_execution(
@@ -380,7 +380,7 @@ def _render_command_palette() -> None:
             )
 
         command_palette.show(on_execute=_on_execute)
-        if st.button("Close palette", key="close_command_palette"):
+        if st.button(t("Close palette"), key="close_command_palette"):
             u.command_palette_open = False
             u.command_palette_query = ""
             st.rerun()

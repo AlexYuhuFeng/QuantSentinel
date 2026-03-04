@@ -48,9 +48,7 @@ def main() -> int:
     for msgid, msgstr, line in entries:
         if not msgid:
             continue
-        if not msgstr:
-            problems.append((msgid, msgstr, line))
-        elif args.strict and msgstr == msgid:
+        if not msgstr or args.strict and msgstr == msgid:
             problems.append((msgid, msgstr, line))
 
     if problems:

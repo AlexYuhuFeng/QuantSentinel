@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import streamlit as st
 
 from quantsentinel.app.ui.state import auth, ui
 from quantsentinel.i18n.gettext import get_translator
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def button(label: str, *, key: str | None = None, on_click: Callable | None = None) -> bool:
@@ -41,19 +44,19 @@ def render_shortcuts_help_dialog() -> None:
 
 def render_loading_state(message: str) -> None:
     with st.container(border=True):
-        st.caption("⏳")
+        st.caption(get_translator(auth().language)("Loading"))
         st.write(message)
 
 
 def render_empty_state(message: str) -> None:
     with st.container(border=True):
-        st.caption("📭")
+        st.caption(get_translator(auth().language)("Empty"))
         st.write(message)
 
 
 def render_success_state(message: str) -> None:
     with st.container(border=True):
-        st.caption("✅")
+        st.caption(get_translator(auth().language)("Success"))
         st.write(message)
 
 
@@ -67,7 +70,7 @@ def render_error_state(
     key_prefix: str = "state_error",
 ) -> None:
     with st.container(border=True):
-        st.caption("❌")
+        st.caption(get_translator(auth().language)("Error"))
         st.write(message)
         retry_col, logs_col = st.columns(2)
         with retry_col:
