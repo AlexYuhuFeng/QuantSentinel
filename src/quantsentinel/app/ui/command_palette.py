@@ -9,6 +9,7 @@ import streamlit as st
 from quantsentinel.app.ui.state import auth, ui
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.infra.db.models import UserRole
+from quantsentinel.services.rbac_service import AuditActionType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -28,6 +29,7 @@ class PaletteCommand:
     min_role: UserRole
     action: Callable[[], dict[str, object] | None]
     keyword_weights: dict[str, float] | None = None
+    action_type: AuditActionType = AuditActionType.RUN
 
 
 class CommandPalette:
@@ -109,6 +111,9 @@ class CommandPalette:
 
         for command in results:
             if st.button(command.label, key=f"cmd_{command.id}"):
+                if auth().role is None:
+                    st.caption(translator("Permission denied."))
+                    return
                 payload = command.action() or {}
                 if on_execute is not None:
                     on_execute(command, payload)

@@ -19,11 +19,12 @@ import pandas as pd
 from sqlalchemy import select
 
 from quantsentinel.infra.db.engine import session_scope
-from quantsentinel.infra.db.models import PriceDaily
+from quantsentinel.infra.db.models import PriceDaily, UserRole
 from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
 from quantsentinel.infra.db.repos.instruments_repo import InstrumentsRepo
 from quantsentinel.infra.db.repos.prices_repo import PricesRepo
 from quantsentinel.infra.db.repos.tasks_repo import TasksRepo
+from quantsentinel.services.rbac_service import AuditActionType, RBACService
 
 
 def _now() -> datetime:
@@ -39,10 +40,11 @@ class MarketService:
     # Watchlist
     # -----------------------------
 
-    def add_to_watchlist(self, *, ticker: str, actor_id: uuid.UUID | None = None) -> None:
+    def add_to_watchlist(self, *, ticker: str, actor_id: uuid.UUID | None = None, actor_role: UserRole | None = None) -> None:
         ticker = ticker.strip()
         if not ticker:
             raise ValueError("Ticker required.")
+        RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace="Market", action=AuditActionType.CREATE)
 
         with session_scope() as session:
             inst_repo = InstrumentsRepo(session)
@@ -62,7 +64,8 @@ class MarketService:
                 )
             )
 
-    def remove_from_watchlist(self, *, ticker: str, actor_id: uuid.UUID | None = None) -> None:
+    def remove_from_watchlist(self, *, ticker: str, actor_id: uuid.UUID | None = None, actor_role: UserRole | None = None) -> None:
+        RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace="Market", action=AuditActionType.DELETE)
         with session_scope() as session:
             inst_repo = InstrumentsRepo(session)
             audit = AuditRepo(session)
@@ -143,7 +146,8 @@ class MarketService:
 
         return pd.DataFrame(rows, columns=columns)
 
-    def refresh_watchlist_async(self, *, actor_id: uuid.UUID | None = None) -> uuid.UUID:
+    def refresh_watchlist_async(self, *, actor_id: uuid.UUID | None = None, actor_role: UserRole | None = None) -> uuid.UUID:
+        RBACService.ensure_workspace_mutation_allowed(role=actor_role, workspace="Market", action=AuditActionType.RUN)
         with session_scope() as session:
             task_repo = TasksRepo(session)
             audit = AuditRepo(session)

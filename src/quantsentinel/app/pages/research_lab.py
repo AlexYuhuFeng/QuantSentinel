@@ -15,6 +15,7 @@ from quantsentinel.app.ui.state import app_state, auth, push_toast
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.research_service import ResearchService
 from quantsentinel.services.task_service import TaskService
+from quantsentinel.services.rbac_service import RBACService
 
 
 def render() -> None:
@@ -22,6 +23,7 @@ def render() -> None:
     state = app_state()
     svc_research = ResearchService()
     svc_task = TaskService()
+    can_mutate = auth().role is not None and RBACService.can_mutate_workspace(auth().role, "Research")
 
     def _view_logs() -> None:
         push_toast("info", t("Opening logs is not yet wired."))
@@ -59,7 +61,7 @@ def render() -> None:
         params = svc_research.default_params(family=family)
         param_inputs = {p_name: st.text_input(p_name, value=str(p_default)) for p_name, p_default in params.items()}
 
-        if st.button(t("Run Backtest")):
+        if can_mutate and st.button(t("Run Backtest")):
             if not ticker:
                 render_empty_state(t("Please enter a ticker"))
             else:
@@ -85,6 +87,8 @@ def render() -> None:
                         key_prefix="research_backtest_error",
                     )
 
+        if not can_mutate:
+            st.caption(t("Viewer mode: read-only."))
         st.subheader(t("Recent Research Results"))
         results = svc_research.get_recent_results(limit=10)
         if not results:

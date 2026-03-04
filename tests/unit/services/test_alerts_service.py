@@ -29,8 +29,14 @@ def _install_stubs() -> None:
     class AlertRule:
         pass
 
+    class UserRole:
+        ADMIN = "Admin"
+        EDITOR = "Editor"
+        VIEWER = "Viewer"
+
     models.AlertEventStatus = AlertEventStatus
     models.AlertRule = AlertRule
+    models.UserRole = UserRole
     sys.modules["quantsentinel.infra.db.models"] = models
 
     repo = types.ModuleType("quantsentinel.infra.db.repos.alerts_repo")
@@ -134,10 +140,11 @@ def test_alert_operations_write_audit() -> None:
     svc = module.AlertsService()
     actor_id = uuid.uuid4()
     payload = module.AlertRuleCreate(name="r1", rule_type="threshold", params_json={"value": 1})
-    svc.create_rule(actor_id=actor_id, payload=payload)
-    svc.update_rule(actor_id=actor_id, rule_id=uuid.uuid4(), payload=module.AlertRuleUpdate(name="r2"))
-    svc.delete_rule(rule_id=uuid.uuid4(), actor_id=actor_id)
-    svc.ack_event(event_id=uuid.uuid4(), actor_id=actor_id)
+    role = module.UserRole.EDITOR
+    svc.create_rule(actor_id=actor_id, payload=payload, actor_role=role)
+    svc.update_rule(actor_id=actor_id, rule_id=uuid.uuid4(), payload=module.AlertRuleUpdate(name="r2"), actor_role=role)
+    svc.delete_rule(rule_id=uuid.uuid4(), actor_id=actor_id, actor_role=role)
+    svc.ack_event(event_id=uuid.uuid4(), actor_id=actor_id, actor_role=role)
 
     actions = [entry.action for entry in module.AuditRepo.writes]
     assert "alert_rule_create" in actions

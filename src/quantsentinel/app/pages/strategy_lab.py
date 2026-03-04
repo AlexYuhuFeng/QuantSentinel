@@ -17,6 +17,7 @@ from quantsentinel.app.ui.state import app_state, auth
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.strategy_service import StrategyService
 from quantsentinel.services.task_service import TaskService
+from quantsentinel.services.rbac_service import RBACService
 
 
 def render() -> None:
@@ -24,6 +25,7 @@ def render() -> None:
     state = app_state()
     svc_strategy = StrategyService()
     svc_task = TaskService()
+    can_mutate = auth().role is not None and RBACService.can_mutate_workspace(auth().role, "Strategy")
 
     def _render_toolbar() -> None:
         st.markdown(f"## {t('Strategy Lab')}")
@@ -51,12 +53,14 @@ def render() -> None:
 
         run, sweep = st.columns(2)
         with run:
-            if st.button(t("Run Backtest")):
+            if can_mutate and st.button(t("Run Backtest")):
                 _run_backtest(t, svc_task, state["strategy_ticker"], state["strategy_start"], state["strategy_end"], family, params)
         with sweep:
-            if st.button(t("Parameter Sweep")):
+            if can_mutate and st.button(t("Parameter Sweep")):
                 _run_parameter_sweep(t, svc_task, state["strategy_ticker"], state["strategy_start"], state["strategy_end"], family, defaults)
 
+        if not can_mutate:
+            st.caption(t("Viewer mode: read-only."))
         st.header(t("Recent Strategy Results"))
         results = svc_strategy.get_recent_results(limit=20)
         if not results:
