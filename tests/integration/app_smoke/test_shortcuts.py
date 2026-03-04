@@ -100,3 +100,15 @@ def test_shortcut_slash_requests_ticker_focus() -> None:
     shortcuts.dispatch_shortcut_events()
 
     assert state.ui().ticker_focus_requested is True
+
+
+def test_shortcut_ctrl_k_opens_command_palette() -> None:
+    _install_streamlit_stub()
+    _install_pandas_stub()
+    _install_model_stub()
+    state, shortcuts, _ = _reload_modules()
+
+    state.queue_shortcut_event("open_command_palette")
+    shortcuts.dispatch_shortcut_events()
+
+    assert state.ui().command_palette_open is True

@@ -152,7 +152,7 @@ def test_command_execution_writes_audit_log_record() -> None:
 
     assert len(writes) == 1
     assert writes[0].payload["command_id"] == "refresh_data"
-    assert writes[0].payload["actor"] == str(actor_id)
+    assert writes[0].payload["actor_id"] == str(actor_id)
 
 
 def test_shortcut_events_change_workspace_and_dialog_state() -> None:
@@ -161,9 +161,25 @@ def test_shortcut_events_change_workspace_and_dialog_state() -> None:
     _install_pandas_stub()
     state, shortcuts, _ = _reload_ui_modules()
 
+    state.queue_shortcut_event("goto_market")
+    shortcuts.dispatch_shortcut_events()
+    assert state.ctx().workspace == "Market"
+
+    state.queue_shortcut_event("goto_explore")
+    shortcuts.dispatch_shortcut_events()
+    assert state.ctx().workspace == "Explore"
+
+    state.queue_shortcut_event("goto_research")
+    shortcuts.dispatch_shortcut_events()
+    assert state.ctx().workspace == "Research"
+
     state.queue_shortcut_event("goto_strategy")
     state.queue_shortcut_event("open_shortcuts_help")
+    state.queue_shortcut_event("focus_ticker")
+    state.queue_shortcut_event("open_command_palette")
     shortcuts.dispatch_shortcut_events()
 
     assert state.ctx().workspace == "Strategy"
     assert state.ui().shortcuts_help_open is True
+    assert state.ui().ticker_focus_requested is True
+    assert state.ui().command_palette_open is True

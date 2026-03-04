@@ -5,15 +5,17 @@ from collections.abc import Mapping
 import streamlit as st
 import streamlit.components.v1 as components
 
-from quantsentinel.app.ui.state import pop_shortcut_event, queue_shortcut_event, set_workspace, ui
+from quantsentinel.app.ui.state import auth, pop_shortcut_event, queue_shortcut_event, set_workspace, ui
+from quantsentinel.i18n.gettext import get_translator
 
 SHORTCUTS: dict[str, str] = {
-    "g m": "Market",
-    "g e": "Explore",
-    "g r": "Research Lab",
-    "g s": "Strategy Lab",
+    "g m": "Go to Market workspace",
+    "g e": "Go to Explore workspace",
+    "g r": "Go to Research workspace",
+    "g s": "Go to Strategy workspace",
     "/": "Focus ticker search",
     "?": "Open shortcuts help",
+    "Ctrl/⌘+K": "Open command palette",
 }
 
 EVENT_TO_WORKSPACE = {
@@ -26,8 +28,10 @@ EVENT_TO_WORKSPACE = {
 
 def register_shortcuts(shortcuts: Mapping[str, str] | None = None) -> None:
     """Register shortcut metadata for help UI."""
+    t = get_translator(auth().language)
     u = ui()
-    u.shortcuts_registry = dict(shortcuts or SHORTCUTS)
+    raw_shortcuts = dict(shortcuts or SHORTCUTS)
+    u.shortcuts_registry = {chord: t(description) for chord, description in raw_shortcuts.items()}
     st.session_state["qs_ui"] = u
 
 
@@ -59,6 +63,13 @@ def mount_shortcut_listener() -> None:
             const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
             const isTyping = ["input", "textarea", "select"].includes(tag) || e.target?.isContentEditable;
 
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+              if (isTyping) return;
+              e.preventDefault();
+              emit("open_command_palette");
+              return;
+            }
+
             if (!isTyping && e.key === "/") {
               e.preventDefault();
               emit("focus_ticker");
@@ -70,6 +81,8 @@ def mount_shortcut_listener() -> None:
               emit("open_shortcuts_help");
               return;
             }
+
+            if (isTyping) return;
 
             if (e.key.toLowerCase() === "g") {
               gPending = true;
@@ -128,5 +141,7 @@ def _dispatch_single_event(event: str) -> None:
         current_ui.shortcuts_help_open = True
     elif event == "focus_ticker":
         current_ui.ticker_focus_requested = True
+    elif event == "open_command_palette":
+        current_ui.command_palette_open = True
 
     st.session_state["qs_ui"] = current_ui

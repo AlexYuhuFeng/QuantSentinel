@@ -1,13 +1,20 @@
 import sys
 import types
 
-streamlit_stub = types.SimpleNamespace(
-    session_state={},
-    text_input=lambda *args, **kwargs: "",
-    button=lambda *args, **kwargs: False,
-    rerun=lambda: None,
-)
-sys.modules.setdefault("streamlit", streamlit_stub)
+streamlit = types.ModuleType("streamlit")
+streamlit.session_state = {}
+streamlit.text_input = lambda *args, **kwargs: ""
+streamlit.button = lambda *args, **kwargs: False
+streamlit.rerun = lambda: None
+streamlit.query_params = {}
+
+components = types.ModuleType("streamlit.components")
+components_v1 = types.ModuleType("streamlit.components.v1")
+components_v1.html = lambda *args, **kwargs: None
+
+sys.modules["streamlit"] = streamlit
+sys.modules["streamlit.components"] = components
+sys.modules["streamlit.components.v1"] = components_v1
 
 from quantsentinel.app.ui.command_palette import CommandPalette, PaletteCommand  # noqa: E402
 from quantsentinel.infra.db.models import UserRole  # noqa: E402
@@ -24,6 +31,7 @@ def _palette() -> CommandPalette:
                 id="open_ticker",
                 label="Open ticker",
                 keywords=("instrument", "symbol", "watchlist"),
+                keyword_weights={"symbol": 1.5},
                 min_role=UserRole.VIEWER,
                 action=_noop,
             ),
@@ -44,6 +52,14 @@ def test_fuzzy_match_finds_keyword() -> None:
     results = palette.search_commands("symbl", UserRole.VIEWER)
 
     assert [command.id for command in results] == ["open_ticker"]
+
+
+def test_keyword_weight_affects_ranking() -> None:
+    palette = _palette()
+
+    results = palette.search_commands("symbol", UserRole.EDITOR)
+
+    assert results[0].id == "open_ticker"
 
 
 def test_viewer_cannot_see_high_privilege_commands() -> None:
