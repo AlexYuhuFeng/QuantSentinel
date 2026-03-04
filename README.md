@@ -102,13 +102,61 @@ QuantSentinel 面向以下用户角色：
 - 提供 `locales/` 与 `.po/.mo` 文件
 - 本地/CI 可运行 `python scripts/check_missing_translations.py locales/zh_CN/LC_MESSAGES/quantsentinel.po` 巡检缺失翻译
 
-### 4.3 新增语言流程
+### 4.3 新增语言完整流程（提取 → 翻译 → 编译 → 注册 → 测试）
 
-1. 在 `locales/` 下新增语言目录（如 `ja/LC_MESSAGES/messages.po`）
-2. 使用 Babel 提取/更新消息目录
-3. 翻译 `.po` 文案并编译 `.mo`
-4. 在语言选择器中注册新语言代码
-5. 补充 i18n 切换测试与关键页面快照测试
+1. **提取文案（POT）**
+
+   ```bash
+   pybabel extract \
+     -k t -k translator \
+     -o locales/quantsentinel.pot \
+     src/quantsentinel/app src/quantsentinel/app/ui
+   ```
+
+2. **初始化/更新语言 PO**
+
+   以日语为例：
+
+   ```bash
+   mkdir -p locales/ja/LC_MESSAGES
+   pybabel init -i locales/quantsentinel.pot -d locales -D quantsentinel -l ja
+   # 或已有语言时：pybabel update -i locales/quantsentinel.pot -d locales -D quantsentinel -l ja
+   ```
+
+3. **翻译 `.po` 文案**
+
+   - 编辑 `locales/ja/LC_MESSAGES/quantsentinel.po`
+   - 保持 `msgid/msgstr` 一一对应，不要漏项
+
+4. **编译 `.mo`**
+
+   ```bash
+   python scripts/i18n_build.py
+   ```
+
+   编译后应生成（每种语言各一份）：
+
+   - `locales/en/LC_MESSAGES/quantsentinel.mo`
+   - `locales/zh_CN/LC_MESSAGES/quantsentinel.mo`
+   - `locales/ja/LC_MESSAGES/quantsentinel.mo`（新增语言）
+
+5. **注册语言代码**
+
+   - 在 Header 语言选择器中加入新语言代码（例如 `ja`）
+   - 统一通过 `get_translator(language)` 获取翻译函数
+
+6. **测试与 CI 校验**
+
+   ```bash
+   make i18n-check
+   pytest tests/integration/i18n/test_language_switch_snapshots.py
+   ```
+
+   `make i18n-check` 会执行：
+
+   - `.po` 缺失翻译巡检
+   - Streamlit 文案硬编码巡检
+   - `python scripts/i18n_build.py --check`（防止 `.po` 变更后忘记编译 `.mo`）
 
 ---
 
