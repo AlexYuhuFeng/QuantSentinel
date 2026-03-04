@@ -9,8 +9,8 @@ streamlit_stub = types.SimpleNamespace(
 )
 sys.modules.setdefault("streamlit", streamlit_stub)
 
-from quantsentinel.app.ui.command_palette import CommandPalette, PaletteCommand
-from quantsentinel.infra.db.models import UserRole
+from quantsentinel.app.ui.command_palette import CommandPalette, PaletteCommand  # noqa: E402
+from quantsentinel.infra.db.models import UserRole  # noqa: E402
 
 
 def _noop() -> dict[str, str]:

@@ -1,12 +1,29 @@
 from __future__ import annotations
 
+from contextlib import suppress
+
 import streamlit as st
 import streamlit.components.v1 as components
 
+from quantsentinel.app.pages import (
+    admin,
+    explore,
+    market,
+    monitor,
+    research_lab,
+    strategy_lab,
+)
+from quantsentinel.app.pages import (
+    help as help_page,
+)
 from quantsentinel.app.ui.command_palette import CommandPalette, PaletteCommand
 from quantsentinel.app.ui.components import render_shortcuts_help_dialog
 from quantsentinel.app.ui.notifications import render_notifications_control
-from quantsentinel.app.ui.shortcuts import dispatch_shortcut_events, mount_shortcut_listener, register_shortcuts
+from quantsentinel.app.ui.shortcuts import (
+    dispatch_shortcut_events,
+    mount_shortcut_listener,
+    register_shortcuts,
+)
 from quantsentinel.app.ui.state import (
     auth,
     clear_auth,
@@ -19,22 +36,12 @@ from quantsentinel.app.ui.state import (
     ui,
 )
 from quantsentinel.common.config import get_settings
+from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.infra.db.engine import db_healthcheck
 from quantsentinel.infra.db.models import LayoutWorkspace, UserRole
-from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.audit_service import AuditService
 from quantsentinel.services.auth_service import AuthService
 from quantsentinel.services.layout_service import LayoutService
-
-from quantsentinel.app.pages import (
-    admin,
-    explore,
-    help as help_page,
-    market,
-    monitor,
-    research_lab,
-    strategy_lab,
-)
 
 # -----------------------------
 # App config
@@ -76,23 +83,21 @@ def _render_layout_menu(t) -> None:
 
         if can_manage:
             save_name = st.text_input(t("Name"), key=f"layout_name_{workspace.value}")
-            if st.button(t("Save"), key=f"layout_save_{workspace.value}"):
-                if save_name:
-                    layout_svc.save(actor_id=a.user_id, workspace=workspace, name=save_name, layout_json={})
-                    st.success(t("Layout saved."))
-                    st.rerun()
+            if st.button(t("Save"), key=f"layout_save_{workspace.value}") and save_name:
+                layout_svc.save(actor_id=a.user_id, workspace=workspace, name=save_name, layout_json={})
+                st.success(t("Layout saved."))
+                st.rerun()
             save_as_name = st.text_input(t("Save as"), key=f"layout_save_as_name_{workspace.value}")
-            if st.button(t("Create preset"), key=f"layout_save_as_{workspace.value}"):
-                if save_as_name:
-                    layout_svc.save_as(
-                        actor_id=a.user_id,
-                        workspace=workspace,
-                        source_layout_id=selected.layout_id if selected else None,
-                        new_name=save_as_name,
-                        layout_json={},
-                    )
-                    st.success(t("Layout preset created."))
-                    st.rerun()
+            if st.button(t("Create preset"), key=f"layout_save_as_{workspace.value}") and save_as_name:
+                layout_svc.save_as(
+                    actor_id=a.user_id,
+                    workspace=workspace,
+                    source_layout_id=selected.layout_id if selected else None,
+                    new_name=save_as_name,
+                    layout_json={},
+                )
+                st.success(t("Layout preset created."))
+                st.rerun()
             if selected and st.button(t("Set default"), key=f"layout_set_default_{workspace.value}"):
                 layout_svc.set_default(actor_id=a.user_id, workspace=workspace, layout_id=selected.layout_id)
                 st.success(t("Default layout updated."))
@@ -163,7 +168,7 @@ def render_header() -> None:
     a = auth()
     c = ctx()
 
-    left, mid, right = st.columns([1.2, 2.6, 1.2], vertical_alignment="center")
+    left, mid, right = st.columns([1.2, 2.6, 1.4], vertical_alignment="center")
     with left:
         st.markdown(f"### {t('QuantSentinel')}")
 
@@ -171,35 +176,34 @@ def render_header() -> None:
         ticker_label = c.ticker or "-"
         date_label = c.date_label or "-"
         workspace_label = c.workspace or "-"
-        st.caption(t("Ticker | Date | Workspace"))
-        st.write(f"{ticker_label} | {date_label} | {workspace_label}")
+        st.write(f"**{ticker_label} | {date_label} | {workspace_label}**")
 
     with right:
-        render_notifications_control(t)
-
-        lang = st.selectbox(
-            t("Language switch"),
-            options=["en", "zh_CN"],
-            index=0 if a.language == "en" else 1,
-            label_visibility="collapsed",
-            key="qs_lang_select",
-        )
-        if lang != a.language:
-            set_language(lang)
-            # Persist preference for logged-in users
-            if a.user_id is not None:
-                try:
-                    auth_svc.set_default_language(actor_id=a.user_id, user_id=a.user_id, language=lang)
-                except Exception:
-                    # Don't block UX on persistence failure
-                    pass
-            st.rerun()
-
-        with st.popover(f"👤 {t('User menu')}", use_container_width=False):
-            st.write(f"**{a.username or ''}**")
-            if st.button(t("Sign out")):
-                clear_auth()
+        notif_col, lang_col, user_col = st.columns([1, 1, 1], vertical_alignment="center")
+        with notif_col:
+            render_notifications_control(t)
+        with lang_col:
+            lang = st.selectbox(
+                t("Language switch"),
+                options=["en", "zh_CN"],
+                index=0 if a.language == "en" else 1,
+                label_visibility="collapsed",
+                key="qs_lang_select",
+            )
+            if lang != a.language:
+                set_language(lang)
+                # Persist preference for logged-in users
+                if a.user_id is not None:
+                    with suppress(Exception):
+                        auth_svc.set_default_language(actor_id=a.user_id, user_id=a.user_id, language=lang)
                 st.rerun()
+
+        with user_col:
+            with st.popover(f"👤 {t('User menu')}", use_container_width=False):
+                st.write(f"**{a.username or ''}**")
+                if st.button(t("Sign out")):
+                    clear_auth()
+                    st.rerun()
 
 
 def render_sidebar() -> str:
@@ -216,6 +220,7 @@ def render_sidebar() -> str:
             ("Monitor", t("Monitor")),
             ("Research", t("Research Lab")),
             ("Strategy", t("Strategy Lab")),
+            ("Help", t("Help")),
         ]
         if a.role == UserRole.ADMIN:
             pages.append(("Admin", t("Admin")))
@@ -263,6 +268,8 @@ def render_page(page_key: str) -> None:
     elif page_key == "Admin":
         set_workspace("Market")
         admin.render()
+    elif page_key == "Help":
+        help_page.render()
     else:
         help_page.render()
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from quantsentinel.app.ui.components import render_empty_state
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
 from quantsentinel.app.ui.state import auth
@@ -26,10 +27,10 @@ def render() -> None:
     def _render_main() -> None:
         if state["section"] == t("Users"):
             st.subheader(t("Manage Users"))
-            st.info(t("User management is available in service-backed deployments."))
+            render_empty_state(t("User management is available in service-backed deployments."))
         else:
             st.subheader(t("Audit Logs"))
-            st.info(t("Audit logs are available in service-backed deployments."))
+            render_empty_state(t("Audit logs are available in service-backed deployments."))
 
     def _render_drawer() -> None:
         Drawer.render(title=t("Details"))

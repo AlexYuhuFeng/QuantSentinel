@@ -1,16 +1,3 @@
-"""
-Alert events repository.
-
-Responsibilities:
-- Persist and query AlertEvent
-- Governance helpers (exists_recent for dedup)
-- Ack operations
-
-Non-responsibilities:
-- Rule evaluation (domain/service)
-- Notification sending
-"""
-
 from __future__ import annotations
 
 import uuid
@@ -18,14 +5,39 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import and_, select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
-from quantsentinel.infra.db.models import AlertEvent, AlertEventStatus
+from quantsentinel.infra.db.models import AlertEvent, AlertEventStatus, AlertRule
 
 
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+@dataclass(frozen=True)
+class AlertRuleCreate:
+    name: str
+    rule_type: str
+    scope_json: dict[str, Any] | None = None
+    params_json: dict[str, Any] | None = None
+    enabled: bool = True
+    severity: str = "MEDIUM"
+    dedup_key: str | None = None
+    silenced_until: datetime | None = None
+    created_by: uuid.UUID | None = None
+
+
+@dataclass(frozen=True)
+class AlertRuleUpdate:
+    name: str | None = None
+    rule_type: str | None = None
+    scope_json: dict[str, Any] | None = None
+    params_json: dict[str, Any] | None = None
+    enabled: bool | None = None
+    severity: str | None = None
+    dedup_key: str | None = None
+    silenced_until: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -34,42 +46,79 @@ class AlertEventCreate:
     ticker: str
     message: str
     context: dict[str, Any]
-    asof_date: Any | None  # date preferred; keep Any to avoid importing date here
+    asof_date: Any | None
     status: AlertEventStatus = AlertEventStatus.NEW
     ack_by: uuid.UUID | None = None
+
+
+class AlertsRepo:
+    def __init__(self, session: Session) -> None:
+        self._session = session
+
+    def list_rules(self) -> list[AlertRule]:
+        stmt = select(AlertRule).order_by(AlertRule.created_at.desc())
+        return list(self._session.execute(stmt).scalars().all())
+
+    def list_enabled_rules(self) -> list[AlertRule]:
+        stmt = select(AlertRule).where(AlertRule.enabled.is_(True)).order_by(AlertRule.created_at.desc())
+        return list(self._session.execute(stmt).scalars().all())
+
+    def get_rule(self, rule_id: uuid.UUID) -> AlertRule | None:
+        return self._session.get(AlertRule, rule_id)
+
+    def create_rule(self, payload: AlertRuleCreate) -> uuid.UUID:
+        rule = AlertRule(
+            id=uuid.uuid4(),
+            name=payload.name,
+            rule_type=payload.rule_type,
+            scope_json=payload.scope_json or {},
+            params_json=payload.params_json or {},
+            enabled=payload.enabled,
+            severity=payload.severity,
+            dedup_key=payload.dedup_key,
+            silenced_until=payload.silenced_until,
+            created_by=payload.created_by,
+        )
+        self._session.add(rule)
+        self._session.flush()
+        return rule.id
+
+    def update_rule(self, *, rule_id: uuid.UUID, payload: AlertRuleUpdate) -> None:
+        values: dict[str, Any] = {}
+        for field in ("name", "rule_type", "scope_json", "params_json", "enabled", "severity", "dedup_key", "silenced_until"):
+            val = getattr(payload, field)
+            if val is not None:
+                values[field] = val
+        if not values:
+            return
+        stmt = update(AlertRule).where(AlertRule.id == rule_id).values(**values)
+        self._session.execute(stmt)
+
+    def set_rule_enabled(self, *, rule_id: uuid.UUID, enabled: bool) -> None:
+        self._session.execute(update(AlertRule).where(AlertRule.id == rule_id).values(enabled=enabled))
+
+    def set_rule_silenced_until(self, *, rule_id: uuid.UUID, silenced_until: datetime | None) -> None:
+        self._session.execute(update(AlertRule).where(AlertRule.id == rule_id).values(silenced_until=silenced_until))
+
+    def delete_rule(self, *, rule_id: uuid.UUID) -> int:
+        res = self._session.execute(delete(AlertRule).where(AlertRule.id == rule_id))
+        return int(res.rowcount or 0)
 
 
 class EventsRepo:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    # -----------------------------
-    # Dedup / governance
-    # -----------------------------
-
-    def exists_recent(self, *, rule_id: uuid.UUID, ticker: str, window_minutes: int) -> bool:
-        """
-        Returns True if an event exists for (rule_id, ticker) within the time window.
-        """
+    def exists_recent(self, *, rule_id: uuid.UUID, ticker: str, window_minutes: int, aggregation_key: str | None = None) -> bool:
         if window_minutes <= 0:
             window_minutes = 60
-
         since = _utc_now() - timedelta(minutes=window_minutes)
-
-        stmt = (
-            select(AlertEvent.id)
-            .where(
-                AlertEvent.rule_id == rule_id,
-                AlertEvent.ticker == ticker,
-                AlertEvent.event_ts >= since,
-            )
-            .limit(1)
-        )
-        return self._session.execute(stmt).scalar_one_or_none() is not None
-
-    # -----------------------------
-    # Create
-    # -----------------------------
+        stmt = select(AlertEvent.id).where(AlertEvent.rule_id == rule_id, AlertEvent.event_ts >= since)
+        if aggregation_key:
+            stmt = stmt.where(AlertEvent.ticker == aggregation_key)
+        else:
+            stmt = stmt.where(AlertEvent.ticker == ticker)
+        return self._session.execute(stmt.limit(1)).scalar_one_or_none() is not None
 
     def create_event(
         self,
@@ -99,10 +148,6 @@ class EventsRepo:
         self._session.flush()
         return event_id
 
-    # -----------------------------
-    # Read
-    # -----------------------------
-
     def get(self, event_id: uuid.UUID) -> AlertEvent | None:
         return self._session.get(AlertEvent, event_id)
 
@@ -112,41 +157,8 @@ class EventsRepo:
             stmt = stmt.where(AlertEvent.status == status)
         return list(self._session.execute(stmt).scalars().all())
 
-    def list_by_rule(self, *, rule_id: uuid.UUID, limit: int = 200) -> list[AlertEvent]:
-        stmt = (
-            select(AlertEvent)
-            .where(AlertEvent.rule_id == rule_id)
-            .order_by(AlertEvent.event_ts.desc())
-            .limit(limit)
-        )
-        return list(self._session.execute(stmt).scalars().all())
-
-    def list_by_ticker(self, *, ticker: str, limit: int = 200) -> list[AlertEvent]:
-        stmt = (
-            select(AlertEvent)
-            .where(AlertEvent.ticker == ticker)
-            .order_by(AlertEvent.event_ts.desc())
-            .limit(limit)
-        )
-        return list(self._session.execute(stmt).scalars().all())
-
-    # -----------------------------
-    # Ack / state transitions
-    # -----------------------------
-
     def ack(self, *, event_id: uuid.UUID, actor_id: uuid.UUID) -> None:
         now = _utc_now()
-        stmt = (
-            update(AlertEvent)
-            .where(AlertEvent.id == event_id)
-            .values(status=AlertEventStatus.ACKED, ack_ts=now, ack_by=actor_id)
+        self._session.execute(
+            update(AlertEvent).where(AlertEvent.id == event_id).values(status=AlertEventStatus.ACKED, ack_ts=now, ack_by=actor_id)
         )
-        self._session.execute(stmt)
-
-    def unack(self, *, event_id: uuid.UUID) -> None:
-        stmt = (
-            update(AlertEvent)
-            .where(AlertEvent.id == event_id)
-            .values(status=AlertEventStatus.NEW, ack_ts=None, ack_by=None)
-        )
-        self._session.execute(stmt)

@@ -7,8 +7,8 @@ from typing import Callable
 import streamlit as st
 
 from quantsentinel.app.ui.state import auth, ui
-from quantsentinel.infra.db.models import UserRole
 from quantsentinel.i18n.gettext import get_translator
+from quantsentinel.infra.db.models import UserRole
 
 _ROLE_WEIGHT = {
     UserRole.VIEWER: 1,

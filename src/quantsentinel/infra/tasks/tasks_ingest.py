@@ -11,7 +11,7 @@ Goals:
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable
 
 from celery import shared_task
@@ -20,7 +20,6 @@ from sqlalchemy import select
 from quantsentinel.infra.db.engine import session_scope
 from quantsentinel.infra.db.models import Instrument, PriceDaily, RefreshLog
 from quantsentinel.infra.db.repos.prices_repo import PricesRepo
-from quantsentinel.infra.db.repos.tasks_repo import TasksRepo
 from quantsentinel.services.task_service import TaskService
 
 
