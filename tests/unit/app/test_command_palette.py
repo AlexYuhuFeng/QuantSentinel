@@ -1,32 +1,20 @@
 import sys
 import types
 
-def _text_input(*_args, **_kwargs) -> str:
-    return ""
+streamlit = types.ModuleType("streamlit")
+streamlit.session_state = {}
+streamlit.text_input = lambda *args, **kwargs: ""
+streamlit.button = lambda *args, **kwargs: False
+streamlit.rerun = lambda: None
+streamlit.query_params = {}
 
+components = types.ModuleType("streamlit.components")
+components_v1 = types.ModuleType("streamlit.components.v1")
+components_v1.html = lambda *args, **kwargs: None
 
-def _button(*_args, **_kwargs) -> bool:
-    return False
-
-
-def _rerun() -> None:
-    return
-
-
-streamlit_stub = types.ModuleType("streamlit")
-streamlit_stub.session_state = {}
-streamlit_stub.text_input = _text_input
-streamlit_stub.button = _button
-streamlit_stub.rerun = _rerun
-
-streamlit_components = types.ModuleType("streamlit.components")
-streamlit_components_v1 = types.ModuleType("streamlit.components.v1")
-streamlit_components.v1 = streamlit_components_v1
-streamlit_stub.components = streamlit_components
-
-sys.modules.setdefault("streamlit", streamlit_stub)
-sys.modules.setdefault("streamlit.components", streamlit_components)
-sys.modules.setdefault("streamlit.components.v1", streamlit_components_v1)
+sys.modules["streamlit"] = streamlit
+sys.modules["streamlit.components"] = components
+sys.modules["streamlit.components.v1"] = components_v1
 
 from quantsentinel.app.ui.command_palette import CommandPalette, PaletteCommand  # noqa: E402
 from quantsentinel.infra.db.models import UserRole  # noqa: E402
@@ -43,6 +31,7 @@ def _palette() -> CommandPalette:
                 id="open_ticker",
                 label="Open ticker",
                 keywords=("instrument", "symbol", "watchlist"),
+                keyword_weights={"symbol": 1.5},
                 min_role=UserRole.VIEWER,
                 action=_noop,
             ),
@@ -63,6 +52,14 @@ def test_fuzzy_match_finds_keyword() -> None:
     results = palette.search_commands("symbl", UserRole.VIEWER)
 
     assert [command.id for command in results] == ["open_ticker"]
+
+
+def test_keyword_weight_affects_ranking() -> None:
+    palette = _palette()
+
+    results = palette.search_commands("symbol", UserRole.EDITOR)
+
+    assert results[0].id == "open_ticker"
 
 
 def test_viewer_cannot_see_high_privilege_commands() -> None:

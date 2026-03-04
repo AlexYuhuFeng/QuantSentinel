@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
@@ -39,6 +39,7 @@ class TasksRepo:
             status=TaskStatus.PENDING,
             progress=0,
             detail=None,
+            log=None,
             started_at=None,
             finished_at=None,
             actor_id=actor_id,
@@ -59,20 +60,47 @@ class TasksRepo:
         )
         self._session.execute(stmt)
 
-    def set_progress(self, *, task_id: uuid.UUID, progress: int, detail: str | None = None) -> None:
+    def set_progress(
+        self,
+        *,
+        task_id: uuid.UUID,
+        progress: int,
+        detail: str | None = None,
+        log: str | None = None,
+        append_log: bool = False,
+        updated_at: datetime | None = None,
+    ) -> None:
         if progress < 0:
             progress = 0
         if progress > 100:
             progress = 100
 
         values = {"progress": progress}
+        if updated_at is None:
+            updated_at = datetime.now(timezone.utc)
+        values["updated_at"] = updated_at
         if detail is not None:
             values["detail"] = detail
+        if log is not None:
+            if append_log:
+                current = self.get(task_id)
+                existing = current.log if current else None
+                values["log"] = f"{existing}\n{log}" if existing else log
+            else:
+                values["log"] = log
 
         stmt = update(Task).where(Task.id == task_id).values(**values)
         self._session.execute(stmt)
 
-    def set_success(self, *, task_id: uuid.UUID, finished_at: datetime, detail: str | None = None) -> None:
+    def set_success(
+        self,
+        *,
+        task_id: uuid.UUID,
+        finished_at: datetime,
+        detail: str | None = None,
+        log: str | None = None,
+        append_log: bool = False,
+    ) -> None:
         values = {
             "status": TaskStatus.SUCCESS,
             "progress": 100,
@@ -81,11 +109,26 @@ class TasksRepo:
         }
         if detail is not None:
             values["detail"] = detail
+        if log is not None:
+            if append_log:
+                current = self.get(task_id)
+                existing = current.log if current else None
+                values["log"] = f"{existing}\n{log}" if existing else log
+            else:
+                values["log"] = log
 
         stmt = update(Task).where(Task.id == task_id).values(**values)
         self._session.execute(stmt)
 
-    def set_failed(self, *, task_id: uuid.UUID, finished_at: datetime, detail: str | None = None) -> None:
+    def set_failed(
+        self,
+        *,
+        task_id: uuid.UUID,
+        finished_at: datetime,
+        detail: str | None = None,
+        log: str | None = None,
+        append_log: bool = False,
+    ) -> None:
         values = {
             "status": TaskStatus.FAILED,
             "finished_at": finished_at,
@@ -93,6 +136,13 @@ class TasksRepo:
         }
         if detail is not None:
             values["detail"] = detail
+        if log is not None:
+            if append_log:
+                current = self.get(task_id)
+                existing = current.log if current else None
+                values["log"] = f"{existing}\n{log}" if existing else log
+            else:
+                values["log"] = log
 
         stmt = update(Task).where(Task.id == task_id).values(**values)
         self._session.execute(stmt)

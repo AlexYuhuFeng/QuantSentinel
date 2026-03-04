@@ -24,6 +24,7 @@ class PaletteCommand:
     keywords: tuple[str, ...]
     min_role: UserRole
     action: Callable[[], dict[str, object] | None]
+    keyword_weights: dict[str, float] | None = None
 
 
 class CommandPalette:
@@ -48,13 +49,41 @@ class CommandPalette:
         scored: list[tuple[float, PaletteCommand]] = []
         needle = query.lower().strip()
         for command in visible:
-            haystacks = [command.label.lower(), *(word.lower() for word in command.keywords)]
-            score = max(SequenceMatcher(None, needle, term).ratio() for term in haystacks)
-            if score >= 0.45:
+            score = self._score_command(command, needle)
+            if score >= 0.40:
                 scored.append((score, command))
 
         scored.sort(key=lambda pair: pair[0], reverse=True)
         return [command for _, command in scored]
+
+    @staticmethod
+    def _score_term(needle: str, term: str) -> float:
+        ratio = SequenceMatcher(None, needle, term).ratio()
+        if term.startswith(needle):
+            ratio += 0.25
+        elif needle in term:
+            ratio += 0.12
+        return min(ratio, 1.0)
+
+    def _score_command(self, command: PaletteCommand, needle: str) -> float:
+        label_score = self._score_term(needle, command.label.lower()) * 1.5
+        keyword_scores = [
+            self._score_term(needle, keyword.lower()) * self._keyword_weight(command, keyword)
+            for keyword in command.keywords
+        ]
+        best_keyword_score = max(keyword_scores, default=0.0)
+        return max(label_score, best_keyword_score)
+
+    @staticmethod
+    def _keyword_weight(command: PaletteCommand, keyword: str) -> float:
+        if command.keyword_weights is not None and keyword in command.keyword_weights:
+            return max(command.keyword_weights[keyword], 0.1)
+        length = len(keyword.strip())
+        if length <= 4:
+            return 1.2
+        if length <= 8:
+            return 1.0
+        return 0.9
 
     def show(
         self,
