@@ -7,6 +7,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from quantsentinel.domain.alerts.expression import evaluate
+from quantsentinel.domain.alerts.governance import resolve_aggregation_key, should_dedup, should_silence
+from quantsentinel.domain.alerts.models import GovernancePolicy
 from quantsentinel.infra.db.engine import session_scope
 from quantsentinel.infra.db.models import AlertEventStatus, AlertRule
 from quantsentinel.infra.db.repos.alerts_repo import AlertRuleCreate, AlertRuleUpdate, AlertsRepo
@@ -50,6 +52,27 @@ class AlertsService:
         "custom_expression",
     }
 
+    @staticmethod
+    def _write_audit(
+        *,
+        audit_repo: AuditRepo,
+        action: str,
+        entity_type: str,
+        entity_id: str | None,
+        actor_id: uuid.UUID | None,
+        payload: dict[str, Any],
+    ) -> None:
+        audit_repo.write(
+            AuditEntryCreate(
+                action=action,
+                entity_type=entity_type,
+                entity_id=entity_id,
+                actor_id=actor_id,
+                payload=payload,
+                ts=_now(),
+            )
+        )
+
     def list_enabled_rules(self) -> list[AlertRule]:
         with session_scope() as session:
             return AlertsRepo(session).list_enabled_rules()
@@ -63,88 +86,76 @@ class AlertsService:
         with session_scope() as session:
             repo = AlertsRepo(session)
             rule_id = repo.create_rule(payload)
-            AuditRepo(session).write(
-                AuditEntryCreate(
-                    action="alert_rule_create",
-                    entity_type="alert_rule",
-                    entity_id=str(rule_id),
-                    actor_id=actor_id,
-                    payload={"rule_type": payload.rule_type, "name": payload.name},
-                    ts=_now(),
-                )
+            self._write_audit(
+                audit_repo=AuditRepo(session),
+                action="alert_rule_create",
+                entity_type="alert_rule",
+                entity_id=str(rule_id),
+                actor_id=actor_id,
+                payload={"rule_type": payload.rule_type, "name": payload.name},
             )
             return rule_id
 
     def update_rule(self, *, actor_id: uuid.UUID | None, rule_id: uuid.UUID, payload: AlertRuleUpdate) -> None:
         with session_scope() as session:
             AlertsRepo(session).update_rule(rule_id=rule_id, payload=payload)
-            AuditRepo(session).write(
-                AuditEntryCreate(
-                    action="alert_rule_update",
-                    entity_type="alert_rule",
-                    entity_id=str(rule_id),
-                    actor_id=actor_id,
-                    payload={"fields": [k for k, v in payload.__dict__.items() if v is not None]},
-                    ts=_now(),
-                )
+            self._write_audit(
+                audit_repo=AuditRepo(session),
+                action="alert_rule_update",
+                entity_type="alert_rule",
+                entity_id=str(rule_id),
+                actor_id=actor_id,
+                payload={"fields": [k for k, v in payload.__dict__.items() if v is not None]},
             )
 
     def delete_rule(self, *, rule_id: uuid.UUID, actor_id: uuid.UUID | None = None) -> None:
         with session_scope() as session:
             AlertsRepo(session).delete_rule(rule_id=rule_id)
-            AuditRepo(session).write(
-                AuditEntryCreate(
-                    action="alert_rule_delete",
-                    entity_type="alert_rule",
-                    entity_id=str(rule_id),
-                    actor_id=actor_id,
-                    payload={},
-                    ts=_now(),
-                )
+            self._write_audit(
+                audit_repo=AuditRepo(session),
+                action="alert_rule_delete",
+                entity_type="alert_rule",
+                entity_id=str(rule_id),
+                actor_id=actor_id,
+                payload={},
             )
 
     def set_rule_enabled(self, *, rule_id: uuid.UUID, enabled: bool, actor_id: uuid.UUID | None = None) -> None:
         with session_scope() as session:
             AlertsRepo(session).set_rule_enabled(rule_id=rule_id, enabled=enabled)
-            AuditRepo(session).write(
-                AuditEntryCreate(
-                    action="alert_rule_update",
-                    entity_type="alert_rule",
-                    entity_id=str(rule_id),
-                    actor_id=actor_id,
-                    payload={"enabled": enabled},
-                    ts=_now(),
-                )
+            self._write_audit(
+                audit_repo=AuditRepo(session),
+                action="alert_rule_update",
+                entity_type="alert_rule",
+                entity_id=str(rule_id),
+                actor_id=actor_id,
+                payload={"enabled": enabled},
             )
 
     def set_rule_silenced(self, *, rule_id: uuid.UUID, duration_minutes: int, actor_id: uuid.UUID | None = None) -> None:
         until = _now() + timedelta(minutes=max(duration_minutes, 1))
         with session_scope() as session:
             AlertsRepo(session).set_rule_silenced_until(rule_id=rule_id, silenced_until=until)
-            AuditRepo(session).write(
-                AuditEntryCreate(
-                    action="alert_rule_update",
-                    entity_type="alert_rule",
-                    entity_id=str(rule_id),
-                    actor_id=actor_id,
-                    payload={"silenced_until": until.isoformat()},
-                    ts=_now(),
-                )
+            self._write_audit(
+                audit_repo=AuditRepo(session),
+                action="alert_rule_update",
+                entity_type="alert_rule",
+                entity_id=str(rule_id),
+                actor_id=actor_id,
+                payload={"silenced_until": until.isoformat()},
             )
 
     def ack_event(self, *, event_id: uuid.UUID, actor_id: uuid.UUID | None = None) -> None:
         actor = actor_id or uuid.UUID("00000000-0000-0000-0000-000000000000")
         with session_scope() as session:
             EventsRepo(session).ack(event_id=event_id, actor_id=actor)
-            AuditRepo(session).write(
-                AuditEntryCreate(
-                    action="alert_event_ack",
-                    entity_type="alert_event",
-                    entity_id=str(event_id),
-                    actor_id=actor_id,
-                    payload={},
-                    ts=_now(),
-                )
+            self._write_audit(
+                audit_repo=AuditRepo(session),
+                action="alert_event_ack",
+                entity_type="alert_event",
+                entity_id=str(event_id),
+                actor_id=actor_id,
+                payload={},
             )
 
     def run_monitor_cycle(self, *, actor_id: uuid.UUID | None, task_id: uuid.UUID | None) -> dict[str, Any]:
@@ -165,16 +176,21 @@ class AlertsService:
             rules_evaluated = created = deduped = silenced = 0
             for idx, rule in enumerate(rules, start=1):
                 rules_evaluated += 1
-                if rule.silenced_until is not None and rule.silenced_until > started:
+                policy = GovernancePolicy(
+                    dedup_minutes=int((rule.params_json or {}).get("dedup_minutes", 60)),
+                    aggregation_key=(rule.params_json or {}).get("aggregation_key"),
+                    silenced_until=rule.silenced_until,
+                )
+                if should_silence(policy=policy, now=started):
                     silenced += 1
                     continue
                 tickers = self._resolve_scope_tickers(rule=rule, watched=[i.ticker for i in watched])
                 for ticker in tickers:
-                    if self._is_deduped(rule=rule, ticker=ticker, events_repo=events_repo):
+                    if self._is_deduped(rule=rule, ticker=ticker, events_repo=events_repo, policy=policy):
                         deduped += 1
                         continue
                     for hit in self._evaluate_rule(rule=rule, ticker=ticker, prices_repo=prices_repo):
-                        agg_key = str((rule.params_json or {}).get("aggregation_key", ticker))
+                        agg_key = resolve_aggregation_key(policy=policy, ticker=ticker)
                         events_repo.create_event(
                             rule_id=rule.id,
                             ticker=agg_key,
@@ -189,23 +205,21 @@ class AlertsService:
                     prog = 15 + int((idx / max(len(rules), 1)) * 75)
                     task_svc.set_progress(task_id=task_id, progress=prog, detail=f"evaluated {idx}/{len(rules)} rules")
 
-            audit_repo.write(
-                AuditEntryCreate(
-                    action="alert_rule_run",
-                    entity_type="alerts",
-                    entity_id=None,
-                    actor_id=actor_id,
-                    payload={
-                        "rules": len(rules),
-                        "watched": len(watched),
-                        "rules_evaluated": rules_evaluated,
-                        "events_created": created,
-                        "events_deduped": deduped,
-                        "events_silenced": silenced,
-                        "ts": started.isoformat(),
-                    },
-                    ts=started,
-                )
+            self._write_audit(
+                audit_repo=audit_repo,
+                action="alert_rule_run",
+                entity_type="alerts",
+                entity_id=None,
+                actor_id=actor_id,
+                payload={
+                    "rules": len(rules),
+                    "watched": len(watched),
+                    "rules_evaluated": rules_evaluated,
+                    "events_created": created,
+                    "events_deduped": deduped,
+                    "events_silenced": silenced,
+                    "ts": started.isoformat(),
+                },
             )
 
         return MonitorCycleResult(rules_evaluated, created, deduped, silenced).to_dict()
@@ -222,13 +236,12 @@ class AlertsService:
         watched_set = set(watched)
         return [t for t in tickers if t in watched_set]
 
-    def _is_deduped(self, *, rule: AlertRule, ticker: str, events_repo: EventsRepo) -> bool:
-        params = rule.params_json or {}
-        return events_repo.exists_recent(
+    def _is_deduped(self, *, rule: AlertRule, ticker: str, events_repo: EventsRepo, policy: GovernancePolicy) -> bool:
+        return should_dedup(
+            policy=policy,
             rule_id=rule.id,
             ticker=ticker,
-            window_minutes=int(params.get("dedup_minutes", 60)),
-            aggregation_key=params.get("aggregation_key"),
+            dedup_lookup=events_repo.exists_recent,
         )
 
     def _validate_rule_payload(self, rule_type: str, params: dict[str, Any]) -> None:
