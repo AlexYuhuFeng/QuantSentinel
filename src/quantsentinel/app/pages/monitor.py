@@ -45,11 +45,11 @@ def render() -> None:
 def _render_rule_wizard(t) -> None:
     st.subheader(t("Create Alert Rule Wizard"))
     step = st.session_state.get("monitor_rule_wizard_step", 1)
-    st.caption(f"{t('Step')} {step}/3")
+    st.caption(f"{t('Step')} {step}/4")
 
     if step == 1:
         name = st.text_input(t("Rule Name"), key="wizard_name")
-        rule_type = st.selectbox(t("Rule Type"), options=sorted(AlertsService.SUPPORTED_RULE_TYPES), key="wizard_type")
+        st.selectbox(t("Rule Type"), options=sorted(AlertsService.SUPPORTED_RULE_TYPES), key="wizard_type")
         if st.button(t("Next"), key="wizard_step1_next"):
             if not name.strip():
                 st.error(t("Rule name is required."))
@@ -58,10 +58,10 @@ def _render_rule_wizard(t) -> None:
                 st.rerun()
 
     elif step == 2:
-        scope_tickers = st.text_input(t("Scope Tickers (comma separated)"), key="wizard_scope")
-        dedup_minutes = st.number_input(t("Dedup Minutes"), min_value=1, value=60, key="wizard_dedup")
-        silence_minutes = st.number_input(t("Silence Minutes"), min_value=0, value=0, key="wizard_silence")
-        aggregation_key = st.text_input(t("Aggregation Key (optional)"), key="wizard_aggregation")
+        st.text_input(t("Scope Tickers (comma separated)"), key="wizard_scope")
+        st.number_input(t("Dedup Minutes"), min_value=1, value=60, key="wizard_dedup")
+        st.number_input(t("Silence Minutes"), min_value=0, value=0, key="wizard_silence")
+        st.text_input(t("Aggregation Key (optional)"), key="wizard_aggregation")
         col_prev, col_next = st.columns(2)
         with col_prev:
             if st.button(t("Back"), key="wizard_step2_prev"):
@@ -72,12 +72,30 @@ def _render_rule_wizard(t) -> None:
                 st.session_state["monitor_rule_wizard_step"] = 3
                 st.rerun()
 
-    else:
+    elif step == 3:
         _render_params_by_type(t)
-        col_prev, col_submit = st.columns(2)
+        col_prev, col_next = st.columns(2)
         with col_prev:
             if st.button(t("Back"), key="wizard_step3_prev"):
                 st.session_state["monitor_rule_wizard_step"] = 2
+                st.rerun()
+        with col_next:
+            if st.button(t("Preview"), key="wizard_step3_preview"):
+                error = _validate_wizard_inputs()
+                if error:
+                    st.error(t(error))
+                else:
+                    st.session_state["monitor_rule_wizard_step"] = 4
+                    st.rerun()
+
+    else:
+        preview = _build_preview_payload()
+        st.markdown(f"**{t('Preview & Confirm')}**")
+        st.json(preview)
+        col_prev, col_submit = st.columns(2)
+        with col_prev:
+            if st.button(t("Back"), key="wizard_step4_prev"):
+                st.session_state["monitor_rule_wizard_step"] = 3
                 st.rerun()
         with col_submit:
             if st.button(t("Create Rule"), key="wizard_submit"):
@@ -109,6 +127,18 @@ def _render_params_by_type(t) -> None:
         st.text_input(t("Expression"), key="wizard_expression", help="Variables: close, ret, vol, z, ma20, ma60")
 
 
+def _validate_wizard_inputs() -> str | None:
+    params = _build_params_from_wizard()
+    rule_type = st.session_state.get("wizard_type", "threshold")
+    if rule_type == "correlation_break" and not str(params.get("benchmark_ticker", "")).strip():
+        return "Benchmark ticker is required."
+    if rule_type == "custom_expression" and not str(params.get("expression", "")).strip():
+        return "Expression is required."
+    if rule_type == "missing_data" and int(params.get("min_points", 0)) > int(params.get("lookback_days", 0)):
+        return "Minimum points cannot exceed lookback days."
+    return None
+
+
 def _build_params_from_wizard() -> dict:
     rule_type = st.session_state.get("wizard_type", "threshold")
     params: dict = {"dedup_minutes": int(st.session_state.get("wizard_dedup", 60))}
@@ -131,24 +161,37 @@ def _build_params_from_wizard() -> dict:
     return params
 
 
+def _build_preview_payload() -> dict:
+    tickers = [x.strip() for x in st.session_state.get("wizard_scope", "").split(",") if x.strip()]
+    return {
+        "name": st.session_state.get("wizard_name", ""),
+        "rule_type": st.session_state.get("wizard_type", "threshold"),
+        "scope": {"tickers": tickers} if tickers else {},
+        "params": _build_params_from_wizard(),
+        "silence_minutes": int(st.session_state.get("wizard_silence", 0)),
+    }
+
+
 def _submit_wizard_rule(t) -> None:
     svc = AlertsService()
     try:
-        tickers = [x.strip() for x in st.session_state.get("wizard_scope", "").split(",") if x.strip()]
+        err = _validate_wizard_inputs()
+        if err:
+            st.error(t(err))
+            return
+        payload_data = _build_preview_payload()
         payload = AlertRuleCreate(
-            name=st.session_state.get("wizard_name", ""),
-            rule_type=st.session_state.get("wizard_type", "threshold"),
-            scope_json={"tickers": tickers} if tickers else {},
-            params_json=_build_params_from_wizard(),
+            name=payload_data["name"],
+            rule_type=payload_data["rule_type"],
+            scope_json=payload_data["scope"],
+            params_json=payload_data["params"],
             enabled=True,
             created_by=auth().user_id,
         )
-        svc.create_rule(actor_id=auth().user_id, payload=payload)
-        silence_minutes = int(st.session_state.get("wizard_silence", 0))
+        rule_id = svc.create_rule(actor_id=auth().user_id, payload=payload)
+        silence_minutes = int(payload_data["silence_minutes"])
         if silence_minutes > 0:
-            rules = svc.list_enabled_rules()
-            if rules:
-                svc.set_rule_silenced(rule_id=rules[0].id, duration_minutes=silence_minutes, actor_id=auth().user_id)
+            svc.set_rule_silenced(rule_id=rule_id, duration_minutes=silence_minutes, actor_id=auth().user_id)
         st.session_state["monitor_rule_wizard_step"] = 1
         push_toast("success", t("Rule created."))
         st.rerun()
