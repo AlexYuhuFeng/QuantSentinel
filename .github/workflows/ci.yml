@@ -28,10 +28,6 @@ jobs:
           poetry --version
           poetry install --with dev
 
-      - name: i18n checks
+      - name: Run unified quality gate
         run: |
-          make i18n-check
-
-      - name: Lint + tests
-        run: |
-          make lint && make test
+          make ci
