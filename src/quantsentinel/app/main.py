@@ -235,7 +235,7 @@ def render_sidebar() -> str:
         st.divider()
         st.caption(t("System health"))
         db_stat = db_healthcheck()
-        st.write(f"DB: **{db_stat.get('status')}**")
+        st.write(f"{t('DB')}: **{db_stat.get('status')}**")
         if db_stat.get("status") != "ok":
             st.code(db_stat.get("detail", ""), language="text")
 
@@ -276,6 +276,7 @@ def render_page(page_key: str) -> None:
 
 
 def _build_command_palette() -> CommandPalette:
+    t = get_translator(auth().language)
     def _open_ticker() -> dict[str, str]:
         open_drawer("instrument", {"ticker": "AAPL"})
         set_workspace("Market")
@@ -293,11 +294,11 @@ def _build_command_palette() -> CommandPalette:
 
     def _refresh_data() -> dict[str, str]:
         set_workspace("Market")
-        push_toast("info", "Refresh queued from command palette.")
+        push_toast("info", t("Refresh queued from command palette."))
         return {"target": "market_refresh"}
 
     def _export_snapshot() -> dict[str, str]:
-        push_toast("info", "Snapshot export requested from command palette.")
+        push_toast("info", t("Snapshot export requested from command palette."))
         return {"target": "snapshot_export"}
 
     def _go_workspace() -> dict[str, str]:
@@ -308,7 +309,7 @@ def _build_command_palette() -> CommandPalette:
         [
             PaletteCommand(
                 id="open_ticker",
-                label="Open ticker",
+                label=t("Open ticker"),
                 keywords=("instrument", "symbol", "watchlist"),
                 min_role=UserRole.VIEWER,
                 action=_open_ticker,
@@ -316,7 +317,7 @@ def _build_command_palette() -> CommandPalette:
             ),
             PaletteCommand(
                 id="create_rule",
-                label="Create rule",
+                label=t("Create rule"),
                 keywords=("alert", "monitor", "policy"),
                 min_role=UserRole.EDITOR,
                 action=_create_rule,
@@ -324,7 +325,7 @@ def _build_command_palette() -> CommandPalette:
             ),
             PaletteCommand(
                 id="run_backtest",
-                label="Run backtest",
+                label=t("Run backtest"),
                 keywords=("strategy", "simulation", "alpha"),
                 min_role=UserRole.EDITOR,
                 action=_run_backtest,
@@ -332,7 +333,7 @@ def _build_command_palette() -> CommandPalette:
             ),
             PaletteCommand(
                 id="refresh_data",
-                label="Refresh data",
+                label=t("Refresh data"),
                 keywords=("sync", "reload", "market"),
                 min_role=UserRole.VIEWER,
                 action=_refresh_data,
@@ -340,7 +341,7 @@ def _build_command_palette() -> CommandPalette:
             ),
             PaletteCommand(
                 id="export_snapshot",
-                label="Export snapshot",
+                label=t("Export snapshot"),
                 keywords=("download", "report", "snapshot"),
                 min_role=UserRole.VIEWER,
                 action=_export_snapshot,
@@ -348,7 +349,7 @@ def _build_command_palette() -> CommandPalette:
             ),
             PaletteCommand(
                 id="go_to_workspace",
-                label="Go to workspace",
+                label=t("Go to workspace"),
                 keywords=("navigate", "explore", "switch"),
                 min_role=UserRole.VIEWER,
                 action=_go_workspace,

@@ -18,15 +18,15 @@ class Drawer:
     def render(
         *,
         render_fn: Callable[[dict[str, object] | None], None] | None = None,
-        title: str = "Details",
+        title: str | None = None,
     ) -> None:
         u = ui()
         t = get_translator(auth().language)
         if not u.drawer_open:
-            st.caption("No selection")
+            st.caption(t("No selection"))
             return
 
-        st.markdown(f"## {title}")
+        st.markdown(f"## {title or t('Details')}")
         if u.drawer_kind:
             st.caption(u.drawer_kind)
 

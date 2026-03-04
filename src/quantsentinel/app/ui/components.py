@@ -65,19 +65,20 @@ def render_error_state(
     *,
     on_retry: Callable[[], None] | None = None,
     on_view_logs: Callable[[], None] | None = None,
-    retry_label: str = "Retry",
-    logs_label: str = "View Logs",
+    retry_label: str | None = None,
+    logs_label: str | None = None,
     key_prefix: str = "state_error",
 ) -> None:
+    t = get_translator(auth().language)
     with st.container(border=True):
-        st.caption(get_translator(auth().language)("Error"))
+        st.caption(t("Error"))
         st.write(message)
         retry_col, logs_col = st.columns(2)
         with retry_col:
-            retry_clicked = st.button(retry_label, key=f"{key_prefix}_retry", use_container_width=True)
+            retry_clicked = st.button(retry_label or t("Retry"), key=f"{key_prefix}_retry", use_container_width=True)
             if retry_clicked and on_retry is not None:
                 on_retry()
         with logs_col:
-            logs_clicked = st.button(logs_label, key=f"{key_prefix}_logs", use_container_width=True)
+            logs_clicked = st.button(logs_label or t("View Logs"), key=f"{key_prefix}_logs", use_container_width=True)
             if logs_clicked and on_view_logs is not None:
                 on_view_logs()

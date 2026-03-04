@@ -1,14 +1,17 @@
-# en translations for QuantSentinel
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: QuantSentinel 1.0\n"
-"Report-Msgid-Bugs-To: \n"
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2026-03-04 09:04+0000\n"
-"PO-Revision-Date: 2026-01-01 00:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language: en\n"
-"Language-Team: en <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -16,71 +19,71 @@ msgstr ""
 
 #: src/quantsentinel/app/main.py:70
 msgid "Layout"
-msgstr "Layout"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:75
 msgid "Preset"
-msgstr "Preset"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:77
 msgid "Load default"
-msgstr "Load default"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:79
 msgid "Layout reset to default."
-msgstr "Layout reset to default."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:81
 msgid "No layout presets."
-msgstr "No layout presets."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:85
 msgid "Name"
-msgstr "Name"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:86
 msgid "Save"
-msgstr "Save"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:88
 msgid "Layout saved."
-msgstr "Layout saved."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:90
 msgid "Save as"
-msgstr "Save as"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:91
 msgid "Create preset"
-msgstr "Create preset"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:99
 msgid "Layout preset created."
-msgstr "Layout preset created."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:101
 msgid "Set default"
-msgstr "Set default"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:103
 msgid "Default layout updated."
-msgstr "Default layout updated."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:105
 msgid "Delete"
-msgstr "Delete"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:107
 msgid "Layout deleted."
-msgstr "Layout deleted."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:120 src/quantsentinel/app/main.py:173
 msgid "QuantSentinel"
-msgstr "QuantSentinel"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:121
 msgid "Team Edition trading research terminal"
-msgstr "Team Edition trading research terminal"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:124
 msgid "Username or email"
@@ -88,23 +91,23 @@ msgstr ""
 
 #: src/quantsentinel/app/main.py:125
 msgid "Password"
-msgstr "Password"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:126
 msgid "Sign in"
-msgstr "Sign in"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:130
 msgid "Bootstrap admin"
-msgstr "Bootstrap admin"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:139
 msgid "Bootstrap admin created. You can sign in now."
-msgstr "Bootstrap admin created. You can sign in now."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:141
 msgid "Bootstrap failed"
-msgstr "Bootstrap failed"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:146
 msgid "Default bootstrap credentials (after bootstrap): "
@@ -112,11 +115,11 @@ msgstr ""
 
 #: src/quantsentinel/app/main.py:155
 msgid "Invalid credentials."
-msgstr "Invalid credentials."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:187
 msgid "Language switch"
-msgstr "Language switch"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:201
 msgid "User menu"
@@ -124,50 +127,49 @@ msgstr ""
 
 #: src/quantsentinel/app/main.py:203
 msgid "Sign out"
-msgstr "Sign out"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:213
 msgid "Navigation"
-msgstr "Navigation"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:217 src/quantsentinel/app/pages/market.py:25
 msgid "Market"
-msgstr "Market"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:218 src/quantsentinel/app/pages/help.py:23
 msgid "Explore"
-msgstr "Explore"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:219 src/quantsentinel/app/pages/help.py:24
 msgid "Monitor"
-msgstr "Monitor"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:220
 #: src/quantsentinel/app/pages/research_lab.py:30
 msgid "Research Lab"
-msgstr "Research Lab"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:221
 #: src/quantsentinel/app/pages/strategy_lab.py:29
 msgid "Strategy Lab"
-msgstr "Strategy Lab"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:222
 msgid "Help"
-msgstr "Help"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:225 src/quantsentinel/app/pages/help.py:27
 msgid "Admin"
-msgstr "Admin"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:229
-#, fuzzy
 msgid "Workspaces"
-msgstr "Go to workspace"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:236
 msgid "System health"
-msgstr "System health"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:238
 msgid "DB"
@@ -175,63 +177,63 @@ msgstr ""
 
 #: src/quantsentinel/app/main.py:242
 msgid "Tips"
-msgstr "Tips"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:243
 msgid "Use Ctrl/⌘+K for Command Palette. Press ? for shortcuts."
-msgstr "Use Ctrl/⌘+K for Command Palette. Press ? for shortcuts."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:297
 msgid "Refresh queued from command palette."
-msgstr "Refresh queued from command palette."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:301
 msgid "Snapshot export requested from command palette."
-msgstr "Snapshot export requested from command palette."
+msgstr ""
 
 #: src/quantsentinel/app/main.py:312
 msgid "Open ticker"
-msgstr "Open ticker"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:320
 msgid "Create rule"
-msgstr "Create rule"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:328
 msgid "Run backtest"
-msgstr "Run backtest"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:336
 msgid "Refresh data"
-msgstr "Refresh data"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:344 src/quantsentinel/app/pages/market.py:39
 msgid "Export snapshot"
-msgstr "Export snapshot"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:352
 msgid "Go to workspace"
-msgstr "Go to workspace"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:367
 msgid "Open Command Palette"
-msgstr "Open Command Palette"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:367
 msgid "Ctrl/⌘+K"
-msgstr "Ctrl/⌘+K"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:374
 msgid "Command Palette"
-msgstr "Command Palette"
+msgstr ""
 
 #: src/quantsentinel/app/main.py:384
 msgid "Close palette"
-msgstr "Close palette"
+msgstr ""
 
 #: src/quantsentinel/app/pages/admin.py:18
 msgid "Access denied — admin only."
-msgstr "Access denied — admin only."
+msgstr ""
 
 #: src/quantsentinel/app/pages/admin.py:21
 #: src/quantsentinel/app/pages/admin.py:25
@@ -241,29 +243,28 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/admin.py:24
 msgid "Admin Console"
-msgstr "Admin Console"
+msgstr ""
 
 #: src/quantsentinel/app/pages/admin.py:25
 msgid "Select section"
-msgstr "Select section"
+msgstr ""
 
 #: src/quantsentinel/app/pages/admin.py:25
 #: src/quantsentinel/app/pages/admin.py:32
 msgid "Audit Logs"
-msgstr "Audit Logs"
+msgstr ""
 
 #: src/quantsentinel/app/pages/admin.py:29
 msgid "Manage Users"
-msgstr "Manage Users"
+msgstr ""
 
 #: src/quantsentinel/app/pages/admin.py:30
-#, fuzzy
 msgid "User management is available in service-backed deployments."
-msgstr "Audit logs are available in service-backed deployments."
+msgstr ""
 
 #: src/quantsentinel/app/pages/admin.py:33
 msgid "Audit logs are available in service-backed deployments."
-msgstr "Audit logs are available in service-backed deployments."
+msgstr ""
 
 #: src/quantsentinel/app/pages/admin.py:36
 #: src/quantsentinel/app/pages/explore.py:98
@@ -275,37 +276,37 @@ msgstr "Audit logs are available in service-backed deployments."
 #: src/quantsentinel/app/pages/strategy_lab.py:70
 #: src/quantsentinel/app/ui/drawer.py:29
 msgid "Details"
-msgstr "Details"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:37
 msgid "Error loading data"
-msgstr "Error loading data"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:43
 #: src/quantsentinel/app/pages/research_lab.py:27
 msgid "Opening logs is not yet wired."
-msgstr "Opening logs is not yet wired."
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:46
 msgid "Explore Market Data"
-msgstr "Explore Market Data"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:49
 msgid "Enter ticker"
-msgstr "Enter ticker"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:53
 msgid "Start date"
-msgstr "Start date"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:56
 msgid "End date"
-msgstr "End date"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:57
 #: src/quantsentinel/app/pages/market.py:37
 msgid "Refresh"
-msgstr "Refresh"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:68
 #: src/quantsentinel/app/pages/monitor.py:284
@@ -318,7 +319,7 @@ msgstr "Refresh"
 #: src/quantsentinel/app/pages/strategy_lab.py:119
 #: src/quantsentinel/app/ui/components.py:78
 msgid "Retry"
-msgstr "Retry"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:69
 #: src/quantsentinel/app/pages/monitor.py:285
@@ -330,45 +331,44 @@ msgstr "Retry"
 #: src/quantsentinel/app/pages/strategy_lab.py:96
 #: src/quantsentinel/app/pages/strategy_lab.py:120
 #: src/quantsentinel/app/ui/components.py:82
-#, fuzzy
 msgid "View Logs"
-msgstr "Audit Logs"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:73
 msgid "Enter a ticker and click Refresh to load data"
-msgstr "Enter a ticker and click Refresh to load data"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:77
 msgid "No price data found for the given ticker/date range"
-msgstr "No price data found for the given ticker/date range"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:80
 msgid "Rendering explore charts..."
-msgstr "Rendering explore charts..."
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:82
 msgid "Price Chart"
-msgstr "Price Chart"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:85
 msgid "Summary Statistics"
-msgstr "Summary Statistics"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:88
 msgid "Derived Series"
-msgstr "Derived Series"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:92
 msgid "Show raw data"
-msgstr "Show raw data"
+msgstr ""
 
 #: src/quantsentinel/app/pages/explore.py:95
 msgid "Explore page loaded"
-msgstr "Explore page loaded"
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:16
 msgid "Help & Documentation"
-msgstr "Help & Documentation"
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:17
 msgid "Workspace guides and FAQs"
@@ -376,7 +376,7 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:20
 msgid "Getting Started"
-msgstr "Getting Started"
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:23
 msgid "Visualize price data and derived indicators for any ticker."
@@ -388,27 +388,27 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:25
 msgid "Research"
-msgstr "Research"
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:25
 msgid "Run backtests and analyze strategies against historical data."
-msgstr "Run backtests and analyze strategies against historical data."
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:26
 msgid "Strategy"
-msgstr "Strategy"
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:26
 msgid "Develop and test trading strategies within the integrated environment."
-msgstr "Develop and test trading strategies within the integrated environment."
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:27
 msgid "Manage users, view audit logs, and configure your workspace."
-msgstr "Manage users, view audit logs, and configure your workspace."
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:30
 msgid "Tips & Tricks"
-msgstr "Tips & Tricks"
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:33
 msgid "Use the search box to quickly find instruments or indicators."
@@ -416,15 +416,15 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:34
 msgid "Click on charts to explore data interactively."
-msgstr "Click on charts to explore data interactively."
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:35
 msgid "Remember to refresh data before running research or alerts."
-msgstr "Remember to refresh data before running research or alerts."
+msgstr ""
 
 #: src/quantsentinel/app/pages/help.py:38
 msgid "Help center loaded"
-msgstr "Help center loaded"
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:26
 msgid "Watchlist, anomalies, and quick context."
@@ -432,7 +432,7 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:29
 msgid "Quick add ticker"
-msgstr "Quick add ticker"
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:31
 msgid "e.g. CL=F, NG=F, AAPL"
@@ -440,36 +440,35 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:49
 msgid "Refresh queued."
-msgstr "Refresh queued."
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:51
 msgid "Failed to queue refresh"
-msgstr "Failed to queue refresh"
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:53
 msgid "Snapshot export is not yet wired."
-msgstr "Snapshot export is not yet wired."
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:58
 msgid "Add"
-msgstr "Add"
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:61
 msgid "Added to watchlist."
-msgstr "Added to watchlist."
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:64
 msgid "Failed to add"
-msgstr "Failed to add"
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:66
 msgid "Tip: Use Command Palette (Ctrl/⌘+K) to open tickers quickly."
-msgstr "Tip: Use Command Palette (Ctrl/⌘+K) to open tickers quickly."
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:70
-#, fuzzy
 msgid "Watchlist"
-msgstr "Added to watchlist."
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:76
 msgid "Your watchlist is empty. Add a ticker above."
@@ -477,97 +476,96 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:87
 msgid "Last"
-msgstr "Last"
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:90
 msgid "Change"
-msgstr "Change"
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:98
 msgid "Anomalies"
-msgstr "Anomalies"
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:99
 msgid "Auto scans for volatility spikes, correlation breaks, stale data, etc."
-msgstr "Auto scans for volatility spikes, correlation breaks, stale data, etc."
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:105
 msgid "No anomalies detected (or data not loaded)."
-msgstr "No anomalies detected (or data not loaded)."
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:110
 msgid "Anomaly"
-msgstr "Anomaly"
+msgstr ""
 
 #: src/quantsentinel/app/pages/market.py:112
 msgid "Open"
-msgstr "Open"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:30
 msgid "Monitor Alerts"
-msgstr "Monitor Alerts"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:33
 msgid "Run Monitor Now"
-msgstr "Run Monitor Now"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:36
 msgid "Refresh Alerts"
-msgstr "Refresh Alerts"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:55
 msgid "Create Alert Rule Wizard"
-msgstr "Create Alert Rule Wizard"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:57
 msgid "Step"
-msgstr "Step"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:60
 #: src/quantsentinel/app/pages/monitor.py:225
 msgid "Rule Name"
-msgstr "Rule Name"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:61
 #: src/quantsentinel/app/pages/monitor.py:226
 msgid "Rule Type"
-msgstr "Rule Type"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:62
 #: src/quantsentinel/app/pages/monitor.py:80
 msgid "Next"
-msgstr "Next"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:64
 msgid "Rule name is required."
-msgstr "Rule name is required."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:70
 msgid "Scope Tickers (comma separated)"
-msgstr "Scope Tickers (comma separated)"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:71
 msgid "Dedup Minutes"
-msgstr "Dedup Minutes"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:72
 msgid "Silence Minutes"
-msgstr "Silence Minutes"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:73
 msgid "Aggregation Key (optional)"
-msgstr "Aggregation Key (optional)"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:76
 #: src/quantsentinel/app/pages/monitor.py:88
 #: src/quantsentinel/app/pages/monitor.py:106
 msgid "Back"
-msgstr "Back"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:92
-#, fuzzy
 msgid "Preview"
-msgstr "Preset"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:102
 msgid "Preview & Confirm"
@@ -575,59 +573,57 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:110
 msgid "Create Rule"
-msgstr "Create Rule"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:116
 msgid "Rule Parameters"
-msgstr "Rule Parameters"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:118
 msgid "Operator"
-msgstr "Operator"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:119
 msgid "Threshold Value"
-msgstr "Threshold Value"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:121
 #: src/quantsentinel/app/pages/monitor.py:124
 #: src/quantsentinel/app/pages/monitor.py:133
 msgid "Lookback"
-msgstr "Lookback"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:122
-#, fuzzy
 msgid "Z Threshold"
-msgstr "Threshold Value"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:125
-#, fuzzy
 msgid "Vol Threshold"
-msgstr "Threshold Value"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:127
 msgid "Max Days"
-msgstr "Max Days"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:129
 msgid "Lookback Days"
-msgstr "Lookback Days"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:130
 msgid "Minimum Points"
-msgstr "Minimum Points"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:132
 msgid "Benchmark Ticker"
-msgstr "Benchmark Ticker"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:134
 msgid "Min Correlation"
-msgstr "Min Correlation"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:136
 msgid "Expression"
-msgstr "Expression"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:136
 msgid "Variables: close, ret, vol, z, ma20, ma60"
@@ -635,128 +631,124 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:205
 msgid "Rule created."
-msgstr "Rule created."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:208
 msgid "Failed to create rule"
-msgstr "Failed to create rule"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:212
 msgid "Alert Rules"
-msgstr "Alert Rules"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:216
 msgid "No alert rules defined."
-msgstr "No alert rules defined."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:227
 msgid "Params"
-msgstr "Params"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:228
 msgid "Scope"
-msgstr "Scope"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:229
 msgid "Enabled"
-msgstr "Enabled"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:232
 msgid "Disable"
-msgstr "Disable"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:232
 msgid "Enable"
-msgstr "Enable"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:234
 msgid "Rule updated."
-msgstr "Rule updated."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:237
 msgid "Silence Rule"
-msgstr "Silence Rule"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:239
 msgid "Rule silenced"
-msgstr "Rule silenced"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:242
 msgid "Delete Rule"
-msgstr "Delete Rule"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:244
 msgid "Rule deleted."
-msgstr "Rule deleted."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:249
 msgid "Recent Alert Events"
-msgstr "Recent Alert Events"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:253
 msgid "No alert events to display."
-msgstr "No alert events to display."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:258
 msgid "Time"
-msgstr "Time"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:258
 msgid "Ticker"
-msgstr "Ticker"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:258
 msgid "Rule"
-msgstr "Rule"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:259
 msgid "Message"
-msgstr "Message"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:263
 msgid "Acknowledge"
-msgstr "Acknowledge"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:266
 msgid "Notify"
-msgstr "Notify"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:269
 #: src/quantsentinel/app/pages/monitor.py:300
 msgid "Status"
-msgstr "Status"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:280
 msgid "Monitor cycle started."
-msgstr "Monitor cycle started."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:283
 msgid "Failed to start monitor"
-msgstr "Failed to start monitor"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:291
-#, fuzzy
 msgid "Recent Tasks"
-msgstr "Recent notifications"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:294
-#, fuzzy
 msgid "No tasks to display."
-msgstr "No alert events to display."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:299
-#, fuzzy
 msgid "Type"
-msgstr "Rule Type"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:300
 msgid "Progress"
 msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:302
-#, fuzzy
 msgid "Detail"
-msgstr "Details"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:306
 msgid "Log Summary"
@@ -764,211 +756,177 @@ msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:313
 msgid "Alert acknowledged."
-msgstr "Alert acknowledged."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:317
 msgid "Failed to acknowledge"
-msgstr "Failed to acknowledge"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:328
 msgid "Alert"
-msgstr "Alert"
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:343
 msgid "Notification queued."
-msgstr "Notification queued."
+msgstr ""
 
 #: src/quantsentinel/app/pages/monitor.py:346
 msgid "Failed to notify"
-msgstr "Failed to notify"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:34
 msgid "Enter ticker for research"
-msgstr "Enter ticker for research"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:37
 msgid "Date range"
-msgstr "Date range"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:39
 msgid "Start"
-msgstr "Start"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:41
 msgid "End"
-msgstr "End"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:49
 msgid "Invalid date range"
-msgstr "Invalid date range"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:57
 msgid "Research Configuration"
-msgstr "Research Configuration"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:58
 msgid "Select strategy family"
-msgstr "Select strategy family"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:62
 #: src/quantsentinel/app/pages/strategy_lab.py:54
 msgid "Run Backtest"
-msgstr "Run Backtest"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:64
 #: src/quantsentinel/app/pages/strategy_lab.py:77
 msgid "Please enter a ticker"
-msgstr "Please enter a ticker"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:78
 #: src/quantsentinel/app/pages/strategy_lab.py:91
 msgid "Backtest queued"
-msgstr "Backtest queued"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:81
 msgid "Failed to start backtest"
-msgstr "Failed to start backtest"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:88
 msgid "Recent Research Results"
-msgstr "Recent Research Results"
+msgstr ""
 
 #: src/quantsentinel/app/pages/research_lab.py:91
 msgid "No research results available"
-msgstr "No research results available"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:32
 msgid "Ticker (for strategy)"
-msgstr "Ticker (for strategy)"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:34
 msgid "Start Date"
-msgstr "Start Date"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:36
 msgid "End Date"
-msgstr "End Date"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:41
 msgid "Start date must be before end date"
-msgstr "Start date must be before end date"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:48
 msgid "Strategy Family"
-msgstr "Strategy Family"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:57
 msgid "Parameter Sweep"
-msgstr "Parameter Sweep"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:60
 msgid "Recent Strategy Results"
-msgstr "Recent Strategy Results"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:63
 msgid "No strategy results available"
-msgstr "No strategy results available"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:94
 msgid "Failed to queue backtest"
-msgstr "Failed to queue backtest"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:115
 msgid "Parameter sweep queued"
-msgstr "Parameter sweep queued"
+msgstr ""
 
 #: src/quantsentinel/app/pages/strategy_lab.py:118
 msgid "Failed to queue parameter sweep"
-msgstr "Failed to queue parameter sweep"
+msgstr ""
 
 #: src/quantsentinel/app/ui/command_palette.py:99
 msgid "Command palette..."
-msgstr "Command palette..."
+msgstr ""
 
 #: src/quantsentinel/app/ui/command_palette.py:107
 msgid "No matching commands."
-msgstr "No matching commands."
+msgstr ""
 
 #: src/quantsentinel/app/ui/components.py:30
 msgid "Keyboard shortcuts"
-msgstr "Keyboard shortcuts"
+msgstr ""
 
 #: src/quantsentinel/app/ui/components.py:33
 msgid "Shortcut"
-msgstr "Shortcut"
+msgstr ""
 
 #: src/quantsentinel/app/ui/components.py:33
 msgid "Action"
-msgstr "Action"
+msgstr ""
 
 #: src/quantsentinel/app/ui/components.py:35
 msgid "No shortcuts registered."
-msgstr "No shortcuts registered."
+msgstr ""
 
 #: src/quantsentinel/app/ui/components.py:36
 #: src/quantsentinel/app/ui/drawer.py:38
 msgid "Close"
-msgstr "Close"
+msgstr ""
 
 #: src/quantsentinel/app/ui/components.py:74
-#, fuzzy
 msgid "Error"
-msgstr "Operator"
+msgstr ""
 
 #: src/quantsentinel/app/ui/drawer.py:26
 msgid "No selection"
-msgstr "No selection"
+msgstr ""
 
 #: src/quantsentinel/app/ui/notifications.py:15
 msgid "Notifications"
-msgstr "Notifications"
+msgstr ""
 
 #: src/quantsentinel/app/ui/notifications.py:16
 msgid "Recent notifications"
-msgstr "Recent notifications"
+msgstr ""
 
 #: src/quantsentinel/app/ui/notifications.py:19
 msgid "No notifications"
-msgstr "No notifications"
+msgstr ""
 
 #: src/quantsentinel/app/ui/notifications.py:23
 msgid "Notification"
-msgstr "Notification"
+msgstr ""
 
 #: src/quantsentinel/app/ui/tables.py:29
 msgid "Page"
-msgstr "Page"
-msgid "Terminal context"
-msgstr "Terminal context"
-
-msgid "Workspace"
-msgstr "Workspace"
-
-msgid "Language"
-msgstr "Language"
-
-msgid "Role"
-msgstr "Role"
-
-
-#~ msgid "Go to Market workspace"
-#~ msgstr "Go to Market workspace"
-
-#~ msgid "Go to Explore workspace"
-#~ msgstr "Go to Explore workspace"
-
-#~ msgid "Go to Research workspace"
-#~ msgstr "Go to Research workspace"
-
-#~ msgid "Go to Strategy workspace"
-#~ msgstr "Go to Strategy workspace"
-
-#~ msgid "Focus ticker search"
-#~ msgstr "Focus ticker search"
-
-#~ msgid "Open shortcuts help"
-#~ msgstr "Open shortcuts help"
-
-#~ msgid "Open command palette"
-#~ msgstr "Open command palette"
+msgstr ""
 
