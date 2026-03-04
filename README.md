@@ -65,14 +65,31 @@ make ci
 该门禁串行执行：
 
 1. `ruff check .`
-2. `pytest` 全量测试
-3. 覆盖率拆分校验：`domain + services` line coverage >= 90%
+2. `pytest --cov=src/quantsentinel/domain --cov=src/quantsentinel/services`
+
+其中覆盖率按 `domain + services` 统计，并设置硬门禁 `line >= 90%`。
 
 也可单独运行覆盖率拆分检查：
 
 ```bash
 make coverage-domain-services
 ```
+
+### 2.5 测试矩阵（最小集合）
+
+- Unit：
+  - 指标计算
+  - 8 策略族
+  - 7 规则
+  - 表达式安全
+  - walk-forward
+  - score 稳定性
+- Integration：
+  - DB 迁移
+  - Celery enqueue
+  - RBAC gating
+  - i18n 切换
+  - layout preset 保存/加载
 
 ---
 
@@ -551,10 +568,12 @@ bash scripts/acceptance_oneclick.sh
 
 脚本覆盖的验收路径包含：
 
-- 登录（默认管理员引导）
-- 导入 / 规则 / 策略 / 导出相关集成路径（通过 smoke + integration 用例）
-- 语言切换（i18n）
-- 快捷键
-- 命令面板
-- 布局保存/加载
-- 任务日志/入队
+- `docker compose up -d` 启动依赖
+- 登录 Admin（默认管理员引导）
+- 导入数据
+- 运行规则/策略
+- 导出快照
+- 切换语言（i18n）
+- 使用快捷键与 Command Palette
+- 保存布局并重新加载
+- 查看任务日志 / Celery 入队

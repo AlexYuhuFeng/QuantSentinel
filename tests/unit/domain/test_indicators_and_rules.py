@@ -10,6 +10,13 @@ def test_indicator_registry_and_sma() -> None:
     assert sma(values, window=2) == [1.0, 1.5, 2.5, 3.5]
 
 
+def test_sma_rejects_non_positive_window_and_handles_empty_values() -> None:
+    with pytest.raises(ValueError):
+        sma([1.0], window=0)
+
+    assert sma([], window=3) == []
+
+
 def test_rule_registry_contains_7_rule_types() -> None:
     assert len(SUPPORTED_RULE_TYPES) == 7
 

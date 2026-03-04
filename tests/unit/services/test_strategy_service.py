@@ -8,7 +8,7 @@ def test_strategy_service_register_and_run() -> None:
 
     service.register_family_runner(
         "ma_crossover",
-        lambda params: {
+        lambda _params: {
             "sharpe": 1.4,
             "max_drawdown": -0.1,
             "win_rate": 0.6,

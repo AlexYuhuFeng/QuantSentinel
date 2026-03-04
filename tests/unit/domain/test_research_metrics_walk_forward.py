@@ -22,3 +22,20 @@ def test_walk_forward_produces_multiple_folds() -> None:
 def test_walk_forward_requires_minimum_folds() -> None:
     with pytest.raises(ValueError):
         perform([0.1, 0.2], folds=1)
+
+
+def test_walk_forward_rejects_empty_returns_and_insufficient_segments() -> None:
+    with pytest.raises(ValueError):
+        perform([], folds=2)
+
+    with pytest.raises(ValueError):
+        perform([0.1], folds=10)
+
+
+def test_sharpe_zero_for_empty_or_zero_volatility() -> None:
+    assert sharpe([]) == 0.0
+    assert sharpe([0.1, 0.1, 0.1]) == 0.0
+
+
+def test_score_stability_zero_for_empty_scores() -> None:
+    assert score_stability([]) == 0.0
