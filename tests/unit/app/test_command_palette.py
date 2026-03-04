@@ -1,13 +1,32 @@
 import sys
 import types
 
-streamlit_stub = types.SimpleNamespace(
-    session_state={},
-    text_input=lambda *args, **kwargs: "",
-    button=lambda *args, **kwargs: False,
-    rerun=lambda: None,
-)
+def _text_input(*_args, **_kwargs) -> str:
+    return ""
+
+
+def _button(*_args, **_kwargs) -> bool:
+    return False
+
+
+def _rerun() -> None:
+    return
+
+
+streamlit_stub = types.ModuleType("streamlit")
+streamlit_stub.session_state = {}
+streamlit_stub.text_input = _text_input
+streamlit_stub.button = _button
+streamlit_stub.rerun = _rerun
+
+streamlit_components = types.ModuleType("streamlit.components")
+streamlit_components_v1 = types.ModuleType("streamlit.components.v1")
+streamlit_components.v1 = streamlit_components_v1
+streamlit_stub.components = streamlit_components
+
 sys.modules.setdefault("streamlit", streamlit_stub)
+sys.modules.setdefault("streamlit.components", streamlit_components)
+sys.modules.setdefault("streamlit.components.v1", streamlit_components_v1)
 
 from quantsentinel.app.ui.command_palette import CommandPalette, PaletteCommand  # noqa: E402
 from quantsentinel.infra.db.models import UserRole  # noqa: E402

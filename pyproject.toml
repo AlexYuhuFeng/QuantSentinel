@@ -59,7 +59,14 @@ filterwarnings = [
 [tool.coverage.run]
 branch = true
 parallel = true
-source_pkgs = ["quantsentinel"]
+source = [
+  "quantsentinel.domain.market.indicators",
+  "quantsentinel.domain.alerts.rules",
+  "quantsentinel.domain.alerts.expression",
+  "quantsentinel.domain.research.walk_forward",
+  "quantsentinel.domain.research.metrics",
+  "quantsentinel.services.strategy_service",
+]
 
 [tool.coverage.report]
 show_missing = true

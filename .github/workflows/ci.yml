@@ -28,10 +28,10 @@ jobs:
           poetry --version
           poetry install --with dev
 
-      - name: i18n checks
+      - name: ruff check
         run: |
-          make i18n-check
+          make lint
 
-      - name: Lint + tests
+      - name: pytest --cov
         run: |
-          make lint && make test
+          make test

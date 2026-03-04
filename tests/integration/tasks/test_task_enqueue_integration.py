@@ -65,4 +65,4 @@ def test_task_queue_writes_audit_and_enqueues(monkeypatch) -> None:
 
 
 def test_task_status_enum_expected_values() -> None:
-    assert {item.value for item in TaskStatus} >= {"queued", "running", "success", "failed"}
+    assert {item.value for item in TaskStatus} >= {"PENDING", "RUNNING", "SUCCESS", "FAILED"}
