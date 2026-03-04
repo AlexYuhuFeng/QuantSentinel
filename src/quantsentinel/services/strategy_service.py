@@ -2,23 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from statistics import mean, pstdev
 from typing import Any
 
-Runner = Callable[[Mapping[str, Any]], dict[str, Any]]
-
-_STRATEGY_FAMILIES = (
-    "carry_proxy",
-    "donchian_breakout",
-    "ma_crossover",
-    "pairs_spread_mr",
-    "rsi_mean_revert",
-    "seasonal_bias",
-    "vol_breakout",
-    "zscore_mean_revert",
+from quantsentinel.domain.strategies.plugin import (
+    get_default_params,
+    get_plugin,
+    list_families,
+    run_plugin,
 )
+from quantsentinel.domain.strategies.search import (
+    BayesianSampler,
+    GridSampler,
+    ParameterSampler,
+    RandomSampler,
+    SearchDimension,
+)
+from quantsentinel.services.lab_contracts import LabResultView
 
 
 @dataclass
@@ -35,25 +35,83 @@ class StrategyService:
     """Unified strategy family registration and execution."""
 
     def __init__(self) -> None:
-        self._runners: dict[str, Runner] = {family: self._default_runner for family in _STRATEGY_FAMILIES}
         self._artifacts: list[dict[str, Any]] = []
 
     @property
     def families(self) -> tuple[str, ...]:
-        return _STRATEGY_FAMILIES
+        return list_families()
 
-    def register_family_runner(self, family: str, runner: Runner) -> None:
-        if family not in self._runners:
-            raise ValueError(f"Unknown strategy family: {family}")
-        self._runners[family] = runner
+    def available_families(self) -> tuple[str, ...]:
+        return self.families
 
-    def run(self, *, family: str, params: Mapping[str, Any]) -> StrategyResult:
-        if family not in self._runners:
-            raise ValueError(f"Unknown strategy family: {family}")
+    def default_params(self, *, family: str) -> dict[str, Any]:
+        return get_default_params(family)
 
-        self._validate_params(params)
-        output = self._runners[family](params)
-        metrics = self._build_metrics(output, params)
+    def parameter_space(self, *, family: str) -> dict[str, SearchDimension]:
+        plugin = get_plugin(family)
+        defaults = self.default_params(family=family)
+        space: dict[str, SearchDimension] = {}
+
+        for field_name, field_info in plugin.schema.model_fields.items():
+            if field_name in {"returns", "signal"}:
+                continue
+            default = defaults.get(field_name)
+            annotation = field_info.annotation
+            if annotation is int and isinstance(default, int):
+                low = max(1, int(default * 0.5))
+                high = max(low + 1, int(default * 1.5))
+                step = max(1, int((high - low) / 5) or 1)
+                space[field_name] = SearchDimension(kind="int", low=low, high=high, step=step)
+            elif annotation is float and isinstance(default, int | float):
+                base = float(default)
+                low = max(0.01, base * 0.5)
+                high = max(low + 0.01, base * 1.5)
+                step = max(0.01, (high - low) / 5)
+                space[field_name] = SearchDimension(kind="float", low=low, high=high, step=step)
+            elif field_info.default is not None:
+                space[field_name] = SearchDimension(kind="categorical", choices=(field_info.default,))
+        return space
+
+    def build_sampler(
+        self,
+        *,
+        sampler: str,
+        space: dict[str, SearchDimension],
+        seed: int | None = None,
+    ) -> ParameterSampler:
+        mapping: dict[str, type[ParameterSampler]] = {
+            "grid": GridSampler,
+            "random": RandomSampler,
+            "bayesian": BayesianSampler,
+        }
+        key = sampler.strip().lower()
+        if key not in mapping:
+            raise ValueError(f"Unknown sampler: {sampler}")
+        sampler_type = mapping[key]
+        if sampler_type is GridSampler:
+            return sampler_type(space=space)
+        return sampler_type(space=space, seed=seed)
+
+    def get_recent_results(self, *, limit: int = 20) -> list[LabResultView]:
+        if limit <= 0:
+            return []
+        recent = list(reversed(self._artifacts))[:limit]
+        return [
+            LabResultView(
+                family=str(artifact.get("family", "unknown")),
+                ticker=str(artifact.get("ticker", "N/A")),
+                params_json=dict(artifact.get("params", {})),
+                metrics_json=dict(artifact.get("metrics", {})),
+                score=float(artifact.get("score", 0.0)),
+            )
+            for artifact in recent
+        ]
+
+    def register_family_runner(self, family: str, runner: Any) -> None:
+        raise NotImplementedError("Plugin-driven families do not support runtime runner overrides")
+
+    def run(self, *, family: str, params: dict[str, Any]) -> StrategyResult:
+        metrics = run_plugin(family, params)
         score = self._compute_score(metrics)
 
         artifact = {
@@ -61,14 +119,14 @@ class StrategyService:
             "params": dict(params),
             "score": score,
             "metrics": metrics,
-            "output_keys": sorted(output.keys()),
+            "output_keys": sorted(metrics.keys()),
         }
         self._artifacts.append(artifact)
 
         return StrategyResult(
             family=family,
             params=dict(params),
-            output=output,
+            output=metrics,
             metrics=metrics,
             score=score,
             artifacts=[artifact],
@@ -77,65 +135,12 @@ class StrategyService:
     def list_artifacts(self) -> list[dict[str, Any]]:
         return [*self._artifacts]
 
-    def _validate_params(self, params: Mapping[str, Any]) -> None:
-        if not params:
-            raise ValueError("Strategy params are required")
-
-        required = {"signal", "returns"}
-        missing = sorted(required - set(params))
-        if missing:
-            joined = ", ".join(missing)
-            raise ValueError(f"Missing required params: {joined}")
-
-        if not isinstance(params["signal"], (int, float)):
-            raise TypeError("param 'signal' must be numeric")
-
-        returns = params["returns"]
-        if not isinstance(returns, list) or not returns:
-            raise TypeError("param 'returns' must be a non-empty list")
-
-        if any(not isinstance(item, (int, float)) for item in returns):
-            raise TypeError("all entries in 'returns' must be numeric")
-
-    def _build_metrics(self, output: Mapping[str, Any], params: Mapping[str, Any]) -> dict[str, float]:
-        returns = [float(v) for v in params["returns"]]
-        sharpe = float(output.get("sharpe", self._sharpe(returns)))
-        drawdown = abs(float(output.get("max_drawdown", min(returns))))
-        win_rate = float(output.get("win_rate", sum(1 for v in returns if v > 0) / len(returns)))
-
-        volatility = pstdev(returns) if len(returns) > 1 else 0.0
-        total_pnl = float(output.get("pnl", sum(returns)))
-
-        return {
-            "pnl": round(total_pnl, 8),
-            "sharpe": round(sharpe, 8),
-            "max_drawdown": round(drawdown, 8),
-            "win_rate": round(win_rate, 8),
-            "volatility": round(volatility, 8),
-        }
-
-    def _compute_score(self, metrics: Mapping[str, float]) -> float:
+    def _compute_score(self, metrics: dict[str, float]) -> float:
         return round(
-            (0.45 * metrics["sharpe"])
-            + (0.25 * metrics["win_rate"])
-            + (0.2 * metrics["pnl"])
+            (0.35 * metrics["sharpe"])
+            + (0.2 * metrics["sortino"])
+            + (0.2 * metrics["hit_rate"])
+            + (0.15 * metrics["return"])
             - (0.1 * metrics["max_drawdown"]),
             6,
         )
-
-    def _sharpe(self, returns: list[float]) -> float:
-        sigma = pstdev(returns) if len(returns) > 1 else 0.0
-        if sigma == 0:
-            return 0.0
-        return mean(returns) / sigma
-
-    def _default_runner(self, params: Mapping[str, Any]) -> dict[str, Any]:
-        returns = [float(v) for v in params["returns"]]
-        pos = sum(1 for v in returns if v > 0)
-        return {
-            "pnl": sum(returns),
-            "sharpe": self._sharpe(returns),
-            "max_drawdown": min(returns),
-            "win_rate": pos / len(returns),
-            "signal_used": float(params["signal"]),
-        }
