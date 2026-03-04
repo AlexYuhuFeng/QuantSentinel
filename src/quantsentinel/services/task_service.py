@@ -33,6 +33,7 @@ class TaskSummary:
     created_at: datetime
     updated_at: datetime
     detail: str | None
+    log: str | None
     started_at: datetime | None
     finished_at: datetime | None
     actor_id: uuid.UUID | None
@@ -123,6 +124,7 @@ class TaskService:
                     created_at=r.created_at,
                     updated_at=r.updated_at,
                     detail=r.detail,
+                    log=r.log,
                     started_at=r.started_at,
                     finished_at=r.finished_at,
                     actor_id=r.actor_id,
@@ -144,6 +146,7 @@ class TaskService:
                 created_at=r.created_at,
                 updated_at=r.updated_at,
                 detail=r.detail,
+                log=r.log,
                 started_at=r.started_at,
                 finished_at=r.finished_at,
                 actor_id=r.actor_id,
@@ -158,16 +161,57 @@ class TaskService:
         with session_scope() as session:
             TasksRepo(session).set_running(task_id=task_id, started_at=now)
 
-    def set_progress(self, *, task_id: uuid.UUID, progress: int, detail: str | None = None) -> None:
+    def set_progress(
+        self,
+        *,
+        task_id: uuid.UUID,
+        progress: int,
+        detail: str | None = None,
+        log: str | None = None,
+        append_log: bool = False,
+    ) -> None:
         with session_scope() as session:
-            TasksRepo(session).set_progress(task_id=task_id, progress=progress, detail=detail)
+            TasksRepo(session).set_progress(
+                task_id=task_id,
+                progress=progress,
+                detail=detail,
+                log=log,
+                append_log=append_log,
+                updated_at=_now(),
+            )
 
-    def mark_success(self, *, task_id: uuid.UUID, detail: str | None = None) -> None:
+    def mark_success(
+        self,
+        *,
+        task_id: uuid.UUID,
+        detail: str | None = None,
+        log: str | None = None,
+        append_log: bool = False,
+    ) -> None:
         now = _now()
         with session_scope() as session:
-            TasksRepo(session).set_success(task_id=task_id, finished_at=now, detail=detail)
+            TasksRepo(session).set_success(
+                task_id=task_id,
+                finished_at=now,
+                detail=detail,
+                log=log,
+                append_log=append_log,
+            )
 
-    def mark_failed(self, *, task_id: uuid.UUID, detail: str | None = None) -> None:
+    def mark_failed(
+        self,
+        *,
+        task_id: uuid.UUID,
+        detail: str | None = None,
+        log: str | None = None,
+        append_log: bool = False,
+    ) -> None:
         now = _now()
         with session_scope() as session:
-            TasksRepo(session).set_failed(task_id=task_id, finished_at=now, detail=detail)
+            TasksRepo(session).set_failed(
+                task_id=task_id,
+                finished_at=now,
+                detail=detail,
+                log=log,
+                append_log=append_log,
+            )

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import streamlit as st
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @contextmanager

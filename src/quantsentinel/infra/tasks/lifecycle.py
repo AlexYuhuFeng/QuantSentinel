@@ -35,7 +35,13 @@ class TaskLifecycle:
 
         def report(progress: int, detail: str | None = None) -> None:
             if task_uuid:
-                svc.set_progress(task_id=task_uuid, progress=progress, detail=detail)
+                svc.set_progress(
+                    task_id=task_uuid,
+                    progress=progress,
+                    detail=detail,
+                    log=detail,
+                    append_log=detail is not None,
+                )
 
         if task_uuid:
             svc.mark_running(task_id=task_uuid)
@@ -48,9 +54,19 @@ class TaskLifecycle:
                 if final_detail is None and isinstance(result, str):
                     final_detail = result
                 report(100, final_detail or "completed")
-                svc.mark_success(task_id=task_uuid, detail=final_detail)
+                svc.mark_success(
+                    task_id=task_uuid,
+                    detail=final_detail,
+                    log=final_detail,
+                    append_log=final_detail is not None,
+                )
             return result
         except Exception as exc:
             if task_uuid:
-                svc.mark_failed(task_id=task_uuid, detail=str(exc))
+                svc.mark_failed(
+                    task_id=task_uuid,
+                    detail=str(exc),
+                    log=str(exc),
+                    append_log=True,
+                )
             raise

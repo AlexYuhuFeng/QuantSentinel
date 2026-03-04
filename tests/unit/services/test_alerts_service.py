@@ -24,6 +24,7 @@ def _install_stubs() -> None:
 
     class AlertEventStatus:
         NEW = "NEW"
+        ACKED = "ACKED"
 
     class AlertRule:
         pass
@@ -54,6 +55,18 @@ def _install_stubs() -> None:
         def list_enabled_rules(self):
             return []
 
+        def update_rule(self, **_kwargs):
+            return None
+
+        def delete_rule(self, **_kwargs):
+            return None
+
+        def set_rule_enabled(self, **_kwargs):
+            return None
+
+        def set_rule_silenced_until(self, **_kwargs):
+            return None
+
     repo.AlertRuleCreate = AlertRuleCreate
     repo.AlertRuleUpdate = AlertRuleUpdate
     repo.AlertsRepo = AlertsRepo
@@ -64,6 +77,9 @@ def _install_stubs() -> None:
     class EventsRepo:
         def __init__(self, _session):
             pass
+
+        def ack(self, **_kwargs):
+            return None
 
     events.EventsRepo = EventsRepo
     sys.modules["quantsentinel.infra.db.repos.events_repo"] = events
@@ -110,14 +126,21 @@ def _install_stubs() -> None:
         sys.modules[name] = mod
 
 
-def test_create_rule_writes_audit() -> None:
+def test_alert_operations_write_audit() -> None:
     _install_stubs()
     module = importlib.import_module("quantsentinel.services.alerts_service")
     importlib.reload(module)
 
     svc = module.AlertsService()
+    actor_id = uuid.uuid4()
     payload = module.AlertRuleCreate(name="r1", rule_type="threshold", params_json={"value": 1})
-    svc.create_rule(actor_id=uuid.uuid4(), payload=payload)
+    svc.create_rule(actor_id=actor_id, payload=payload)
+    svc.update_rule(actor_id=actor_id, rule_id=uuid.uuid4(), payload=module.AlertRuleUpdate(name="r2"))
+    svc.delete_rule(rule_id=uuid.uuid4(), actor_id=actor_id)
+    svc.ack_event(event_id=uuid.uuid4(), actor_id=actor_id)
 
-    assert len(module.AuditRepo.writes) == 1
-    assert module.AuditRepo.writes[0].action == "alert_rule_create"
+    actions = [entry.action for entry in module.AuditRepo.writes]
+    assert "alert_rule_create" in actions
+    assert "alert_rule_update" in actions
+    assert "alert_rule_delete" in actions
+    assert "alert_event_ack" in actions

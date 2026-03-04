@@ -8,6 +8,7 @@ from typing import Any
 
 _ALLOWED_VARIABLES = {"close", "ret", "vol", "z", "ma20", "ma60"}
 _ALLOWED_FUNCTIONS = {"abs": abs, "min": min, "max": max}
+_FORBIDDEN_NAMES = {"eval", "exec", "__import__"}
 _ALLOWED_NODES = {
     ast.Expression,
     ast.BoolOp,
@@ -52,13 +53,19 @@ def _validate_ast(node: ast.AST) -> None:
             raise ExpressionValidationError(f"Unsupported syntax: {type(current).__name__}")
 
         if isinstance(current, ast.Name) and current.id not in _ALLOWED_VARIABLES | set(_ALLOWED_FUNCTIONS):
+            if current.id in _FORBIDDEN_NAMES:
+                raise ExpressionValidationError(f"Forbidden name: {current.id}")
             raise ExpressionValidationError(f"Variable/function '{current.id}' is not allowed")
 
         if isinstance(current, ast.Call):
             if not isinstance(current.func, ast.Name):
                 raise ExpressionValidationError("Only direct function calls are allowed")
+            if current.func.id in _FORBIDDEN_NAMES:
+                raise ExpressionValidationError(f"Forbidden function: {current.func.id}")
             if current.func.id not in _ALLOWED_FUNCTIONS:
                 raise ExpressionValidationError(f"Function '{current.func.id}' is not allowed")
+            if current.keywords:
+                raise ExpressionValidationError("Keyword arguments are not allowed")
 
 
 def evaluate(expr: str, values: Mapping[str, float | int] | None = None) -> bool:
