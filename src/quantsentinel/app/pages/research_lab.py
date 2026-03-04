@@ -56,7 +56,7 @@ def render() -> None:
 
         st.subheader(t("Research Configuration"))
         family = st.selectbox(t("Select strategy family"), options=svc_research.available_families(), index=0)
-        params = svc_research.default_params(family)
+        params = svc_research.default_params(family=family)
         param_inputs = {p_name: st.text_input(p_name, value=str(p_default)) for p_name, p_default in params.items()}
 
         if st.button(t("Run Backtest")):

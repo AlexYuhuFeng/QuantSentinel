@@ -46,7 +46,7 @@ def render() -> None:
             return
         families = svc_strategy.available_families()
         family = st.selectbox(t("Strategy Family"), families)
-        defaults = svc_strategy.default_params(family)
+        defaults = svc_strategy.default_params(family=family)
         params: dict[str, Any] = {k: st.text_input(k, value=str(v)) for k, v in defaults.items()}
 
         run, sweep = st.columns(2)
