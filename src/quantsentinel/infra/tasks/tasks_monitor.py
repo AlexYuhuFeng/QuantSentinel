@@ -54,8 +54,11 @@ def run_alert_monitor(self, task_id: str | None = None) -> None:
 )
 def run_rules_batch(self, task_id: str | None = None, *, batch_name: str = "default") -> None:
     def _worker(report):
+        if not batch_name.strip():
+            raise ValueError("batch_name is required")
         report(20, f"loading rules batch={batch_name}")
         report(65, "evaluating rules")
         report(90, "writing alert events")
+        return f"rules batch completed: {batch_name}"
 
-    TaskLifecycle(task_id).run(worker=_worker, success_detail=f"rules batch completed: {batch_name}")
+    TaskLifecycle(task_id).run(worker=_worker)

@@ -122,6 +122,7 @@ class Task(Base):
     )
     progress: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    log: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

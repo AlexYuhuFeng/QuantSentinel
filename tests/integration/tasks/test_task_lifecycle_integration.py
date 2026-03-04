@@ -18,6 +18,7 @@ class _TaskRow:
     status: TaskStatus
     progress: int
     detail: str | None
+    log: str | None
     started_at: datetime | None
     finished_at: datetime | None
     actor_id: UUID | None
@@ -52,6 +53,7 @@ def _patch_task_db(monkeypatch, store: _Store) -> None:
                 status=TaskStatus.PENDING,
                 progress=0,
                 detail=None,
+                log=None,
                 started_at=None,
                 finished_at=None,
                 actor_id=actor_id,
@@ -75,14 +77,33 @@ def _patch_task_db(monkeypatch, store: _Store) -> None:
             row.updated_at = started_at
             store.transitions.append((task_id, "running", row.status, row.progress))
 
-        def set_progress(self, *, task_id: UUID, progress: int, detail: str | None = None):
+        def set_progress(
+            self,
+            *,
+            task_id: UUID,
+            progress: int,
+            detail: str | None = None,
+            log: str | None = None,
+            append_log: bool = False,
+            updated_at=None,
+        ):
             row = store.tasks[task_id]
             row.progress = progress
             if detail is not None:
                 row.detail = detail
+            if log is not None:
+                row.log = f"{row.log}\n{log}" if append_log and row.log else log
             store.transitions.append((task_id, "progress", row.status, row.progress))
 
-        def set_success(self, *, task_id: UUID, finished_at: datetime, detail: str | None = None):
+        def set_success(
+            self,
+            *,
+            task_id: UUID,
+            finished_at: datetime,
+            detail: str | None = None,
+            log: str | None = None,
+            append_log: bool = False,
+        ):
             row = store.tasks[task_id]
             row.status = TaskStatus.SUCCESS
             row.progress = 100
@@ -90,15 +111,27 @@ def _patch_task_db(monkeypatch, store: _Store) -> None:
             row.updated_at = finished_at
             if detail is not None:
                 row.detail = detail
+            if log is not None:
+                row.log = f"{row.log}\n{log}" if append_log and row.log else log
             store.transitions.append((task_id, "success", row.status, row.progress))
 
-        def set_failed(self, *, task_id: UUID, finished_at: datetime, detail: str | None = None):
+        def set_failed(
+            self,
+            *,
+            task_id: UUID,
+            finished_at: datetime,
+            detail: str | None = None,
+            log: str | None = None,
+            append_log: bool = False,
+        ):
             row = store.tasks[task_id]
             row.status = TaskStatus.FAILED
             row.finished_at = finished_at
             row.updated_at = finished_at
             if detail is not None:
                 row.detail = detail
+            if log is not None:
+                row.log = f"{row.log}\n{log}" if append_log and row.log else log
             store.transitions.append((task_id, "failed", row.status, row.progress))
 
     class FakeAuditRepo:
@@ -162,5 +195,25 @@ def test_enqueue_then_rules_batch_status_flow(monkeypatch) -> None:
     row = store.tasks[task_id]
     assert row.status == TaskStatus.SUCCESS
     assert row.detail == "rules batch completed: nightly"
+    assert row.log is not None and "rules batch completed: nightly" in row.log
     assert row.progress == 100
     assert [item[1] for item in store.transitions if item[0] == task_id][:2] == ["create", "running"]
+
+
+def test_rules_batch_failure_updates_failed_status(monkeypatch) -> None:
+    store = _Store()
+    _patch_task_db(monkeypatch, store)
+
+    svc = TaskService()
+    task_id = svc.queue(task_type="run_rules_batch", actor_id=None, celery_signature=None)
+
+    try:
+        run_rules_batch.run(task_id=str(task_id), batch_name="")
+        assert False, "expected ValueError"
+    except ValueError:
+        pass
+
+    row = store.tasks[task_id]
+    assert row.status == TaskStatus.FAILED
+    assert row.detail == "batch_name is required"
+    assert row.log is not None and "batch_name is required" in row.log
