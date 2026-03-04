@@ -4,6 +4,15 @@ on:
   push:
     branches: ["main"]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      run_nightly_smoke:
+        description: "Run lightweight acceptance smoke job"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: "0 2 * * *"
 
 jobs:
   test:
@@ -31,3 +40,34 @@ jobs:
       - name: Run unified quality gate
         run: |
           make ci
+
+  acceptance-smoke-nightly:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_nightly_smoke)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry==1.8.3
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev
+
+      - name: Run lightweight acceptance smoke
+        run: |
+          PYTHONPATH=src poetry run pytest \
+            tests/integration/app_smoke/test_default_admin_bootstrap.py \
+            tests/integration/tasks/test_param_search_pipeline.py \
+            tests/integration/i18n/test_language_switch_snapshots.py \
+            tests/integration/app_smoke/test_shortcuts.py \
+            -q

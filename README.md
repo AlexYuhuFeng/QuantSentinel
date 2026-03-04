@@ -536,18 +536,18 @@ UI 必须显示最近任务。
 
 ---
 
-## 15. 本地运行与验证（目标流程）
+## 15. 本地运行与验证（脚本化，<=10 步）
 
-1. 准备 Docker 与 Docker Compose。
-2. 配置 `.env`（数据库、Redis、密钥、默认管理员）。
-3. 启动服务：`docker compose up -d --build`
-4. 执行 DB migration（Alembic upgrade head）。
-5. 初始化基础数据（Admin、角色、系统配置、样例标的）。
-6. 打开 Streamlit（`web` 服务）并登录 Admin。
-7. 导入行情数据（生成 `revision_id`）。
-8. 创建并运行规则（Monitor），确认告警与审计日志。
-9. 运行策略/参数搜索（Strategy Lab），查看任务与排行榜。
-10. 导出 Explore 快照，切换语言验证 i18n。
+1. 准备 Docker / Docker Compose 与 Python 3.12。
+2. 安装依赖：`poetry install --with dev`
+3. 配置 `.env`（数据库、Redis、密钥、默认管理员）。
+4. 运行一键验收：`bash scripts/acceptance_oneclick.sh`
+5. 如需快捷入口，可执行：`make acceptance`
+6. 验收完成后查看日志：`artifacts/acceptance/acceptance_<timestamp>.log`
+7. 验收摘要查看：`artifacts/acceptance/acceptance_<timestamp>.summary.log`
+8. 若失败，按日志中的 `FAIL | <step>` 定位具体阶段重试。
+
+> `scripts/acceptance_oneclick.sh` 已串行覆盖：`docker compose up -d --build`、migration、默认 admin bootstrap/login、导入数据、规则执行、策略/参数搜索、快照导出、语言切换、快捷键与命令面板检查。
 
 
 ### 15.1 凭据来源优先级
@@ -606,7 +606,7 @@ Apply migrations:
 
 ## 8. 一键验收脚本（Docker Compose）
 
-在 `docker compose up -d` 后，可使用以下命令串行验收关键流程：
+可使用以下命令执行串行验收关键流程：
 
 ```bash
 make acceptance
@@ -614,14 +614,4 @@ make acceptance
 bash scripts/acceptance_oneclick.sh
 ```
 
-脚本覆盖的验收路径包含：
-
-- `docker compose up -d` 启动依赖
-- 登录 Admin（默认管理员引导）
-- 导入数据
-- 运行规则/策略
-- 导出快照
-- 切换语言（i18n）
-- 使用快捷键与 Command Palette
-- 保存布局并重新加载
-- 查看任务日志 / Celery 入队
+脚本会自动记录日志到 `artifacts/acceptance/`，并输出 `*.summary.log`（按步骤标记 PASS/FAIL），用于失败追溯。
