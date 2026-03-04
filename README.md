@@ -444,15 +444,14 @@ UI 必须显示最近任务。
 
 1. setup Python 3.12
 2. install dev dependencies
-3. `make i18n-check`
-4. `make lint && make test`
+3. `make ci`（统一执行 `make lint`、`make test`、`make i18n-check`）
 
 ---
 
 ## 13.3 开发环境版本基线
 
 - 开发环境 Python 版本：**3.12+**。
-- CI 固定使用 Python `3.12`（见 `.github/workflows/ci.yml`）。
+- CI 固定使用 Python `3.12`（见 `.github/workflows/ci.yml`），本地开发需保持 **3.12+**。
 - 本地建议通过 `.python-version`（仓库已提供）或容器化开发，避免团队成员版本漂移。
 
 ---
@@ -499,12 +498,10 @@ UI 必须显示最近任务。
 
 ## 15.2 基线自检（PR 前必跑）
 
-建议在提交 PR 前，至少执行以下命令：
+建议在提交 PR 前，先执行统一自检命令：
 
-1. `make i18n-check`
-2. `make i18n-build`
-3. `make lint`
-4. `make test`
+1. `make lint && make test && make i18n-check`
+2. 如涉及翻译改动，再执行：`make i18n-build`
 
 ---
 
