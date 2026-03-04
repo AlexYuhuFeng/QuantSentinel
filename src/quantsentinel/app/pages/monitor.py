@@ -28,6 +28,8 @@ def render() -> None:
                 st.rerun()
 
     def _render_main() -> None:
+        _render_recent_tasks(t)
+        st.divider()
         _render_rules_section(t)
         st.divider()
         _render_events_section(t)
@@ -36,6 +38,29 @@ def render() -> None:
         Drawer.render(title=t("Details"))
 
     render_workspace_shell(render_toolbar=_render_toolbar, render_main=_render_main, render_drawer=_render_drawer)
+
+
+def _render_recent_tasks(t) -> None:
+    st.header(t("Recent Tasks"))
+    task_svc = TaskService()
+    tasks = task_svc.list_recent(limit=20)
+    if not tasks:
+        st.info(t("No tasks yet."))
+        return
+
+    rows = [
+        {
+            t("Created"): item.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            t("Task Type"): item.task_type,
+            t("Status"): item.status.value,
+            t("Progress"): f"{item.progress}%",
+            t("Started"): item.started_at.strftime("%Y-%m-%d %H:%M:%S") if item.started_at else "-",
+            t("Finished"): item.finished_at.strftime("%Y-%m-%d %H:%M:%S") if item.finished_at else "-",
+            t("Detail"): item.detail or "-",
+        }
+        for item in tasks
+    ]
+    st.dataframe(rows, use_container_width=True)
 
 
 def _render_rules_section(t) -> None:
@@ -102,8 +127,12 @@ def _render_events_section(t) -> None:
 def _run_monitor_cycle(t) -> None:
     task_svc = TaskService()
     try:
-        task_id = task_svc.create_task(task_type="alert_monitor_cycle")
-        task_svc.start_task(task_id)
+        task_svc.queue(
+            task_type="run_rules_batch",
+            actor_id=None,
+            celery_signature="quantsentinel.infra.tasks.tasks_monitor.run_rules_batch",
+            celery_args={"batch_name": "manual"},
+        )
         push_toast("success", t("Monitor cycle started."))
     except Exception as e:
         push_toast("error", f"{t('Failed to start monitor')}: {e}")
