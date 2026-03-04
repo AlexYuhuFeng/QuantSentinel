@@ -1,11 +1,4 @@
-# English translations for QuantSentinel
-# This file is the base (English) translation template.
-# msgid is original text; msgstr matches msgid for base language.
-# NOTE: Keep msgstr identical to msgid for English.
-#
-# QUANT SENTINEL UI — COMMON PHRASES
-# -------------------------------------------------------------------
-
+# en translations for QuantSentinel
 msgid ""
 msgstr ""
 "Project-Id-Version: QuantSentinel 1.0\n"
@@ -17,256 +10,631 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# --- Navigation / Menus ---
-
-msgid "Market"
-msgstr "Market"
-
-msgid "Explore"
-msgstr "Explore"
-
-msgid "Monitor"
-msgstr "Monitor"
-
-msgid "Research"
-msgstr "Research"
-  
-msgid "Strategy"
-msgstr "Strategy"
-
-msgid "Help"
-msgstr "Help"
-
-msgid "Admin"
-msgstr "Admin"
-
-msgid "Sign In"
-msgstr "Sign In"
-
-msgid "Sign Out"
-msgstr "Sign Out"
-
-msgid "Refresh"
-msgstr "Refresh"
-
-msgid "Settings"
-msgstr "Settings"
-
-# --- Buttons ---
-
-msgid "Submit"
-msgstr "Submit"
-
-msgid "Cancel"
-msgstr "Cancel"
-
-msgid "Save"
-msgstr "Save"
-
-msgid "Delete"
-msgstr "Delete"
-
-msgid "Create"
-msgstr "Create"
-
-msgid "Update"
-msgstr "Update"
-
-msgid "Add"
-msgstr "Add"
-
-msgid "Remove"
-msgstr "Remove"
-
-# --- Forms / Labels ---
-
-msgid "Username"
-msgstr "Username"
-
-msgid "Email"
-msgstr "Email"
-
-msgid "Password"
-msgstr "Password"
-
-msgid "Confirm Password"
-msgstr "Confirm Password"
-
-msgid "Enter username"
-msgstr "Enter username"
-
-msgid "Enter email"
-msgstr "Enter email"
-
-msgid "Enter password"
-msgstr "Enter password"
-
-msgid "Role"
-msgstr "Role"
-
-msgid "Status"
-msgstr "Status"
-
-msgid "Search"
-msgstr "Search"
-
-msgid "Filter by"
-msgstr "Filter by"
-
-msgid "Select"
-msgstr "Select"
-
-# --- Alerts / Messages ---
-
-msgid "Invalid credentials."
-msgstr "Invalid credentials."
-
-msgid "User is inactive."
-msgstr "User is inactive."
-
-msgid "Changes saved successfully."
-msgstr "Changes saved successfully."
-
-msgid "Error occurred"
-msgstr "Error occurred"
-
-msgid "Are you sure?"
-msgstr "Are you sure?"
-
-msgid "No data available."
-msgstr "No data available."
-
-msgid "Loading..."
-msgstr "Loading..."
-
-msgid "Success"
-msgstr "Success"
-
-msgid "Failure"
-msgstr "Failure"
-
-# --- Table Headers ---
-
-msgid "Ticker"
-msgstr "Ticker"
-
-msgid "Last Price"
-msgstr "Last Price"
-
-msgid "Change"
-msgstr "Change"
-
-msgid "Volume"
-msgstr "Volume"
-
-msgid "Date"
-msgstr "Date"
-
-msgid "Close"
-msgstr "Close"
-
-msgid "Open"
-msgstr "Open"
-
-msgid "High"
-msgstr "High"
-
-msgid "Low"
-msgstr "Low"
-
-msgid "Actions"
-msgstr "Actions"
-
-msgid "Results"
-msgstr "Results"
-
-# --- Notifications ---
-
-msgid "New alert generated"
-msgstr "New alert generated"
-
-msgid "Notification sent"
-msgstr "Notification sent"
-
-msgid "Notification failed"
-msgstr "Notification failed"
-
-# --- Task / Background Status ---
-
-msgid "Task queued"
-msgstr "Task queued"
-
-msgid "Task running"
-msgstr "Task running"
-
-msgid "Task succeeded"
-msgstr "Task succeeded"
-
-msgid "Task failed"
-msgstr "Task failed"
-
-# --- Strategy / Backtest UI ---
-
-msgid "Backtest"
-msgstr "Backtest"
-
-msgid "Performance"
-msgstr "Performance"
-
-msgid "Results Chart"
-msgstr "Results Chart"
-
-msgid "Parameters"
-msgstr "Parameters"
-
-# --- Search / Monitor UI ---
-
-msgid "Watchlist"
-msgstr "Watchlist"
-
-msgid "Add to Watchlist"
-msgstr "Add to Watchlist"
-
-msgid "Remove from Watchlist"
-msgstr "Remove from Watchlist"
-
-msgid "Refresh All"
-msgstr "Refresh All"
-
-msgid "Refresh selected"
-msgstr "Refresh selected"
-
-msgid "Data stale"
-msgstr "Data stale"
-
-msgid "Percent Change"
-msgstr "Percent Change"
-
-msgid "Last Close"
-msgstr "Last Close"
-
-msgid "Command palette..."
-msgstr "Command palette..."
-
-
-msgid "Page"
-msgstr "Page"
-
-
-msgid "QuantSentinel"
-msgstr "QuantSentinel"
-
-msgid "Keyboard shortcuts"
-msgstr "Keyboard shortcuts"
-
-msgid "Shortcut"
-msgstr "Shortcut"
+msgid "Access denied — admin only."
+msgstr "Access denied — admin only."
+
+msgid "Acknowledge"
+msgstr "Acknowledge"
 
 msgid "Action"
 msgstr "Action"
 
-msgid "No shortcuts registered."
-msgstr "No shortcuts registered."
+msgid "Add"
+msgstr "Add"
+
+msgid "Added to watchlist."
+msgstr "Added to watchlist."
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Admin Console"
+msgstr "Admin Console"
+
+msgid "Aggregation Key (optional)"
+msgstr "Aggregation Key (optional)"
+
+msgid "Alert"
+msgstr "Alert"
+
+msgid "Alert Rules"
+msgstr "Alert Rules"
+
+msgid "Alert acknowledged."
+msgstr "Alert acknowledged."
+
+msgid "Anomalies"
+msgstr "Anomalies"
+
+msgid "Anomaly"
+msgstr "Anomaly"
+
+msgid "Audit Logs"
+msgstr "Audit Logs"
+
+msgid "Audit logs are available in service-backed deployments."
+msgstr "Audit logs are available in service-backed deployments."
+
+msgid "Auto scans for volatility spikes, correlation breaks, stale data, etc."
+msgstr "Auto scans for volatility spikes, correlation breaks, stale data, etc."
+
+msgid "Back"
+msgstr "Back"
+
+msgid "Backtest queued"
+msgstr "Backtest queued"
+
+msgid "Benchmark Ticker"
+msgstr "Benchmark Ticker"
+
+msgid "Bootstrap admin"
+msgstr "Bootstrap admin"
+
+msgid "Bootstrap admin created. You can sign in now."
+msgstr "Bootstrap admin created. You can sign in now."
+
+msgid "Bootstrap failed"
+msgstr "Bootstrap failed"
+
+msgid "Change"
+msgstr "Change"
+
+msgid "Click on charts to explore data interactively."
+msgstr "Click on charts to explore data interactively."
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Close palette"
+msgstr "Close palette"
+
+msgid "Command Palette"
+msgstr "Command Palette"
+
+msgid "Command palette..."
+msgstr "Command palette..."
+
+msgid "Create Alert Rule Wizard"
+msgstr "Create Alert Rule Wizard"
+
+msgid "Create Rule"
+msgstr "Create Rule"
+
+msgid "Create preset"
+msgstr "Create preset"
+
+msgid "Create rule"
+msgstr "Create rule"
+
+msgid "Ctrl/⌘+K"
+msgstr "Ctrl/⌘+K"
+
+msgid "Date range"
+msgstr "Date range"
+
+msgid "Dedup Minutes"
+msgstr "Dedup Minutes"
+
+msgid "Default layout updated."
+msgstr "Default layout updated."
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Delete Rule"
+msgstr "Delete Rule"
+
+msgid "Derived Series"
+msgstr "Derived Series"
+
+msgid "Details"
+msgstr "Details"
+
+msgid "Develop and test trading strategies within the integrated environment."
+msgstr "Develop and test trading strategies within the integrated environment."
+
+msgid "Disable"
+msgstr "Disable"
+
+msgid "Enable"
+msgstr "Enable"
+
+msgid "Enabled"
+msgstr "Enabled"
+
+msgid "End"
+msgstr "End"
+
+msgid "End Date"
+msgstr "End Date"
+
+msgid "End date"
+msgstr "End date"
+
+msgid "Enter a ticker and click Refresh to load data"
+msgstr "Enter a ticker and click Refresh to load data"
+
+msgid "Enter ticker"
+msgstr "Enter ticker"
+
+msgid "Enter ticker for research"
+msgstr "Enter ticker for research"
+
+msgid "Error loading data"
+msgstr "Error loading data"
+
+msgid "Explore"
+msgstr "Explore"
+
+msgid "Explore Market Data"
+msgstr "Explore Market Data"
+
+msgid "Explore page loaded"
+msgstr "Explore page loaded"
+
+msgid "Export snapshot"
+msgstr "Export snapshot"
+
+msgid "Expression"
+msgstr "Expression"
+
+msgid "Failed to acknowledge"
+msgstr "Failed to acknowledge"
+
+msgid "Failed to add"
+msgstr "Failed to add"
+
+msgid "Failed to create rule"
+msgstr "Failed to create rule"
+
+msgid "Failed to notify"
+msgstr "Failed to notify"
+
+msgid "Failed to queue backtest"
+msgstr "Failed to queue backtest"
+
+msgid "Failed to queue parameter sweep"
+msgstr "Failed to queue parameter sweep"
+
+msgid "Failed to queue refresh"
+msgstr "Failed to queue refresh"
+
+msgid "Failed to start backtest"
+msgstr "Failed to start backtest"
+
+msgid "Failed to start monitor"
+msgstr "Failed to start monitor"
+
+msgid "Getting Started"
+msgstr "Getting Started"
+
+msgid "Go to workspace"
+msgstr "Go to workspace"
+
+msgid "Help"
+msgstr "Help"
+
+msgid "Help & Documentation"
+msgstr "Help & Documentation"
+
+msgid "Help center loaded"
+msgstr "Help center loaded"
+
+msgid "Invalid credentials."
+msgstr "Invalid credentials."
+
+msgid "Invalid date range"
+msgstr "Invalid date range"
+
+msgid "Keyboard shortcuts"
+msgstr "Keyboard shortcuts"
+
+msgid "Language switch"
+msgstr "Language switch"
+
+msgid "Last"
+msgstr "Last"
+
+msgid "Layout"
+msgstr "Layout"
+
+msgid "Layout deleted."
+msgstr "Layout deleted."
+
+msgid "Layout preset created."
+msgstr "Layout preset created."
+
+msgid "Layout reset to default."
+msgstr "Layout reset to default."
+
+msgid "Layout saved."
+msgstr "Layout saved."
+
+msgid "Load default"
+msgstr "Load default"
+
+msgid "Lookback"
+msgstr "Lookback"
+
+msgid "Lookback Days"
+msgstr "Lookback Days"
+
+msgid "Manage Users"
+msgstr "Manage Users"
+
+msgid "Manage users, view audit logs, and configure your workspace."
+msgstr "Manage users, view audit logs, and configure your workspace."
+
+msgid "Market"
+msgstr "Market"
+
+msgid "Max Days"
+msgstr "Max Days"
+
+msgid "Message"
+msgstr "Message"
+
+msgid "Min Correlation"
+msgstr "Min Correlation"
+
+msgid "Minimum Points"
+msgstr "Minimum Points"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid "Monitor Alerts"
+msgstr "Monitor Alerts"
+
+msgid "Monitor cycle started."
+msgstr "Monitor cycle started."
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Navigation"
+msgstr "Navigation"
+
+msgid "Next"
+msgstr "Next"
+
+msgid "No alert events to display."
+msgstr "No alert events to display."
+
+msgid "No alert rules defined."
+msgstr "No alert rules defined."
+
+msgid "No anomalies detected (or data not loaded)."
+msgstr "No anomalies detected (or data not loaded)."
+
+msgid "No layout presets."
+msgstr "No layout presets."
 
 msgid "No matching commands."
 msgstr "No matching commands."
+
+msgid "No notifications"
+msgstr "No notifications"
+
+msgid "No price data found for the given ticker/date range"
+msgstr "No price data found for the given ticker/date range"
+
+msgid "No research results available"
+msgstr "No research results available"
+
+msgid "No selection"
+msgstr "No selection"
+
+msgid "No shortcuts registered."
+msgstr "No shortcuts registered."
+
+msgid "No strategy results available"
+msgstr "No strategy results available"
+
+msgid "Notification"
+msgstr "Notification"
+
+msgid "Notification queued."
+msgstr "Notification queued."
+
+msgid "Notifications"
+msgstr "Notifications"
+
+msgid "Notify"
+msgstr "Notify"
+
+msgid "Open"
+msgstr "Open"
+
+msgid "Open Command Palette"
+msgstr "Open Command Palette"
+
+msgid "Open ticker"
+msgstr "Open ticker"
+
+msgid "Opening logs is not yet wired."
+msgstr "Opening logs is not yet wired."
+
+msgid "Operator"
+msgstr "Operator"
+
+msgid "Page"
+msgstr "Page"
+
+msgid "Parameter Sweep"
+msgstr "Parameter Sweep"
+
+msgid "Parameter sweep queued"
+msgstr "Parameter sweep queued"
+
+msgid "Params"
+msgstr "Params"
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Please enter a ticker"
+msgstr "Please enter a ticker"
+
+msgid "Preset"
+msgstr "Preset"
+
+msgid "Price Chart"
+msgstr "Price Chart"
+
+msgid "QuantSentinel"
+msgstr "QuantSentinel"
+
+msgid "Quick add ticker"
+msgstr "Quick add ticker"
+
+msgid "Recent Alert Events"
+msgstr "Recent Alert Events"
+
+msgid "Recent Research Results"
+msgstr "Recent Research Results"
+
+msgid "Recent Strategy Results"
+msgstr "Recent Strategy Results"
+
+msgid "Recent notifications"
+msgstr "Recent notifications"
+
+msgid "Refresh"
+msgstr "Refresh"
+
+msgid "Refresh Alerts"
+msgstr "Refresh Alerts"
+
+msgid "Refresh data"
+msgstr "Refresh data"
+
+msgid "Refresh queued from command palette."
+msgstr "Refresh queued from command palette."
+
+msgid "Refresh queued."
+msgstr "Refresh queued."
+
+msgid "Remember to refresh data before running research or alerts."
+msgstr "Remember to refresh data before running research or alerts."
+
+msgid "Rendering explore charts..."
+msgstr "Rendering explore charts..."
+
+msgid "Research"
+msgstr "Research"
+
+msgid "Research Configuration"
+msgstr "Research Configuration"
+
+msgid "Research Lab"
+msgstr "Research Lab"
+
+msgid "Retry"
+msgstr "Retry"
+
+msgid "Rule"
+msgstr "Rule"
+
+msgid "Rule Name"
+msgstr "Rule Name"
+
+msgid "Rule Parameters"
+msgstr "Rule Parameters"
+
+msgid "Rule Type"
+msgstr "Rule Type"
+
+msgid "Rule created."
+msgstr "Rule created."
+
+msgid "Rule deleted."
+msgstr "Rule deleted."
+
+msgid "Rule name is required."
+msgstr "Rule name is required."
+
+msgid "Rule silenced"
+msgstr "Rule silenced"
+
+msgid "Rule updated."
+msgstr "Rule updated."
+
+msgid "Run Backtest"
+msgstr "Run Backtest"
+
+msgid "Run Monitor Now"
+msgstr "Run Monitor Now"
+
+msgid "Run backtest"
+msgstr "Run backtest"
+
+msgid "Run backtests and analyze strategies against historical data."
+msgstr "Run backtests and analyze strategies against historical data."
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Save as"
+msgstr "Save as"
+
+msgid "Scope"
+msgstr "Scope"
+
+msgid "Scope Tickers (comma separated)"
+msgstr "Scope Tickers (comma separated)"
+
+msgid "Select section"
+msgstr "Select section"
+
+msgid "Select strategy family"
+msgstr "Select strategy family"
+
+msgid "Set default"
+msgstr "Set default"
+
+msgid "Shortcut"
+msgstr "Shortcut"
+
+msgid "Show raw data"
+msgstr "Show raw data"
+
+msgid "Sign in"
+msgstr "Sign in"
+
+msgid "Sign out"
+msgstr "Sign out"
+
+msgid "Silence Minutes"
+msgstr "Silence Minutes"
+
+msgid "Silence Rule"
+msgstr "Silence Rule"
+
+msgid "Snapshot export is not yet wired."
+msgstr "Snapshot export is not yet wired."
+
+msgid "Snapshot export requested from command palette."
+msgstr "Snapshot export requested from command palette."
+
+msgid "Start"
+msgstr "Start"
+
+msgid "Start Date"
+msgstr "Start Date"
+
+msgid "Start date"
+msgstr "Start date"
+
+msgid "Start date must be before end date"
+msgstr "Start date must be before end date"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Step"
+msgstr "Step"
+
+msgid "Strategy"
+msgstr "Strategy"
+
+msgid "Strategy Family"
+msgstr "Strategy Family"
+
+msgid "Strategy Lab"
+msgstr "Strategy Lab"
+
+msgid "Summary Statistics"
+msgstr "Summary Statistics"
+
+msgid "System health"
+msgstr "System health"
+
+msgid "Team Edition trading research terminal"
+msgstr "Team Edition trading research terminal"
+
+msgid "Threshold Value"
+msgstr "Threshold Value"
+
+msgid "Ticker"
+msgstr "Ticker"
+
+msgid "Ticker (for strategy)"
+msgstr "Ticker (for strategy)"
+
+msgid "Time"
+msgstr "Time"
+
+msgid "Tip: Use Command Palette (Ctrl/⌘+K) to open tickers quickly."
+msgstr "Tip: Use Command Palette (Ctrl/⌘+K) to open tickers quickly."
+
+msgid "Tips"
+msgstr "Tips"
+
+msgid "Tips & Tricks"
+msgstr "Tips & Tricks"
+
+msgid "Use Ctrl/⌘+K for Command Palette. Press ? for shortcuts."
+msgstr "Use Ctrl/⌘+K for Command Palette. Press ? for shortcuts."
+
+msgid "Use the search box to quickly find instruments or indicators."
+msgstr "Use the search box to quickly find instruments or indicators."
+
+msgid "User management is available in service-backed deployments."
+msgstr "User management is available in service-backed deployments."
+
+msgid "User menu"
+msgstr "User menu"
+
+msgid "Username or email"
+msgstr "Username or email"
+
+msgid "Users"
+msgstr "Users"
+
+msgid "Variables: close, ret, vol, z, ma20, ma60"
+msgstr "Variables: close, ret, vol, z, ma20, ma60"
+
+msgid "View Logs"
+msgstr "View Logs"
+
+msgid "View and manage rules to detect market conditions automatically."
+msgstr "View and manage rules to detect market conditions automatically."
+
+msgid "Visualize price data and derived indicators for any ticker."
+msgstr "Visualize price data and derived indicators for any ticker."
+
+msgid "Vol Threshold"
+msgstr "Vol Threshold"
+
+msgid "Watchlist"
+msgstr "Watchlist"
+
+msgid "Watchlist, anomalies, and quick context."
+msgstr "Watchlist, anomalies, and quick context."
+
+msgid "Workspace guides and FAQs"
+msgstr "Workspace guides and FAQs"
+
+msgid "Workspaces"
+msgstr "Workspaces"
+
+msgid "Your watchlist is empty. Add a ticker above."
+msgstr "Your watchlist is empty. Add a ticker above."
+
+msgid "Z Threshold"
+msgstr "Z Threshold"
+
+msgid "e.g. CL=F, NG=F, AAPL"
+msgstr "e.g. CL=F, NG=F, AAPL"
+msgid "Language"
+msgstr "Language"
+
+msgid "Terminal context"
+msgstr "Terminal context"
+
+msgid "Workspace"
+msgstr "Workspace"
+
+msgid "Role"
+msgstr "Role"

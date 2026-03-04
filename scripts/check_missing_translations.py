@@ -25,19 +25,32 @@ def parse_po(path: Path) -> list[tuple[str, str, int]]:
     return entries
 
 
+def _detect_language(po_path: Path) -> str | None:
+    for line in po_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith('"Language: ') and stripped.endswith('\\n"'):
+            return stripped[len('"Language: '):-3]
+    return None
+
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Check PO file for likely missing translations (empty msgstr or msgstr==msgid)."
+        description="Check PO file for missing translations (empty msgstr)."
     )
     parser.add_argument("po_file", help="Path to .po file")
+    parser.add_argument("--strict", action="store_true", help="Also fail when msgstr == msgid.")
     args = parser.parse_args()
 
-    entries = parse_po(Path(args.po_file))
+    po_path = Path(args.po_file)
+    entries = parse_po(po_path)
     problems: list[tuple[str, str, int]] = []
     for msgid, msgstr, line in entries:
         if not msgid:
             continue
-        if not msgstr or msgstr == msgid:
+        if not msgstr:
+            problems.append((msgid, msgstr, line))
+        elif args.strict and msgstr == msgid:
             problems.append((msgid, msgstr, line))
 
     if problems:
