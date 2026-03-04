@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from statistics import mean
+from statistics import mean, pstdev
 from typing import Any
 
 Runner = Callable[[Mapping[str, Any]], dict[str, Any]]
@@ -26,6 +26,7 @@ class StrategyResult:
     family: str
     params: dict[str, Any]
     output: dict[str, Any]
+    metrics: dict[str, float]
     score: float
     artifacts: list[dict[str, Any]] = field(default_factory=list)
 
@@ -52,12 +53,14 @@ class StrategyService:
 
         self._validate_params(params)
         output = self._runners[family](params)
-        score = self._compute_score(output)
+        metrics = self._build_metrics(output, params)
+        score = self._compute_score(metrics)
 
         artifact = {
             "family": family,
             "params": dict(params),
             "score": score,
+            "metrics": metrics,
             "output_keys": sorted(output.keys()),
         }
         self._artifacts.append(artifact)
@@ -66,6 +69,7 @@ class StrategyService:
             family=family,
             params=dict(params),
             output=output,
+            metrics=metrics,
             score=score,
             artifacts=[artifact],
         )
@@ -93,18 +97,44 @@ class StrategyService:
         if any(not isinstance(item, (int, float)) for item in returns):
             raise TypeError("all entries in 'returns' must be numeric")
 
-    def _compute_score(self, output: Mapping[str, Any]) -> float:
-        sharpe = float(output.get("sharpe", 0.0))
-        drawdown = abs(float(output.get("max_drawdown", 0.0)))
-        win_rate = float(output.get("win_rate", 0.0))
-        return round((0.5 * sharpe) + (0.3 * win_rate) - (0.2 * drawdown), 6)
+    def _build_metrics(self, output: Mapping[str, Any], params: Mapping[str, Any]) -> dict[str, float]:
+        returns = [float(v) for v in params["returns"]]
+        sharpe = float(output.get("sharpe", self._sharpe(returns)))
+        drawdown = abs(float(output.get("max_drawdown", min(returns))))
+        win_rate = float(output.get("win_rate", sum(1 for v in returns if v > 0) / len(returns)))
+
+        volatility = pstdev(returns) if len(returns) > 1 else 0.0
+        total_pnl = float(output.get("pnl", sum(returns)))
+
+        return {
+            "pnl": round(total_pnl, 8),
+            "sharpe": round(sharpe, 8),
+            "max_drawdown": round(drawdown, 8),
+            "win_rate": round(win_rate, 8),
+            "volatility": round(volatility, 8),
+        }
+
+    def _compute_score(self, metrics: Mapping[str, float]) -> float:
+        return round(
+            (0.45 * metrics["sharpe"])
+            + (0.25 * metrics["win_rate"])
+            + (0.2 * metrics["pnl"])
+            - (0.1 * metrics["max_drawdown"]),
+            6,
+        )
+
+    def _sharpe(self, returns: list[float]) -> float:
+        sigma = pstdev(returns) if len(returns) > 1 else 0.0
+        if sigma == 0:
+            return 0.0
+        return mean(returns) / sigma
 
     def _default_runner(self, params: Mapping[str, Any]) -> dict[str, Any]:
         returns = [float(v) for v in params["returns"]]
         pos = sum(1 for v in returns if v > 0)
         return {
             "pnl": sum(returns),
-            "sharpe": mean(returns) / (max(abs(min(returns)), abs(max(returns))) or 1.0),
+            "sharpe": self._sharpe(returns),
             "max_drawdown": min(returns),
             "win_rate": pos / len(returns),
             "signal_used": float(params["signal"]),
