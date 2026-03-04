@@ -19,6 +19,7 @@ def test_research_service_project_and_walk_forward() -> None:
 
     assert run.project_id == project.project_id
     assert run.summary["folds"] >= 2
+    assert "avg_net_pnl" in run.summary
     assert len(service.get_runs(project.project_id)) == 1
 
 
@@ -34,3 +35,30 @@ def test_research_service_requires_min_folds() -> None:
             trading_cost_bps=1,
             slippage_bps=1,
         )
+
+
+def test_research_service_rejects_invalid_inputs() -> None:
+    service = ResearchService()
+    project = service.create_project(name="wf-invalid")
+
+    with pytest.raises(ValueError):
+        service.run_walk_forward(
+            project_id=project.project_id,
+            returns=[0.1, -0.1],
+            folds=2,
+            trading_cost_bps=-1,
+            slippage_bps=1,
+        )
+
+    with pytest.raises(ValueError):
+        service.run_walk_forward(
+            project_id=project.project_id,
+            returns=[0.1, -0.1],
+            folds=2,
+            trading_cost_bps=1,
+            slippage_bps=1,
+            max_position=0,
+        )
+
+    with pytest.raises(ValueError):
+        service.get_runs("missing-project")
