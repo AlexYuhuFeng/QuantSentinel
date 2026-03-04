@@ -58,8 +58,8 @@ def render() -> None:
             _refresh_data()
 
     def _render_main() -> None:
-        df = state.get("explore_data")
-        if df is None:
+        price_df = state.get("explore_data")
+        if price_df is None:
             if state.get("explore_last_error"):
                 render_error_state(
                     state["explore_last_error"],
@@ -72,25 +72,25 @@ def render() -> None:
                 return
             render_empty_state(t("Enter a ticker and click Refresh to load data"))
             return
-        if df.empty:
+
+        if price_df.empty:
             render_empty_state(t("No price data found for the given ticker/date range"))
             return
 
         render_loading_state(t("Rendering explore charts..."))
 
         st.subheader(t("Price Chart"))
-        st.line_chart(df.set_index("date")[["close", "open", "high", "low"]])
+        st.line_chart(price_df.set_index("date")[["open", "high", "low", "close"]])
 
         st.subheader(t("Summary Statistics"))
-        st.write(df.describe())
+        st.write(price_df[["open", "high", "low", "close", "volume"]].describe())
 
         st.subheader(t("Derived Series"))
-        indicators = svc_explore.compute_indicators(df)
-        for _, series in indicators.items():
-            st.line_chart(series)
+        indicators_df = svc_explore.compute_indicators(price_df)
+        st.line_chart(indicators_df.set_index("date")[["returns", "rolling_vol", "zscore"]])
 
         if st.checkbox(t("Show raw data")):
-            st.dataframe(df)
+            st.dataframe(price_df)
 
         render_success_state(t("Explore page loaded"))
 

@@ -9,11 +9,17 @@ Strict layering:
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import date, datetime
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import uuid
+
+import pandas as pd
+from sqlalchemy import select
 
 from quantsentinel.infra.db.engine import session_scope
+from quantsentinel.infra.db.models import PriceDaily
 from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
 from quantsentinel.infra.db.repos.instruments_repo import InstrumentsRepo
 from quantsentinel.infra.db.repos.prices_repo import PricesRepo
@@ -21,7 +27,7 @@ from quantsentinel.infra.db.repos.tasks_repo import TasksRepo
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(datetime.UTC)
 
 
 class MarketService:
@@ -104,6 +110,38 @@ class MarketService:
     # -----------------------------
     # Async refresh
     # -----------------------------
+
+    def get_price_series(self, *, ticker: str, start: date, end: date) -> pd.DataFrame:
+        ticker = ticker.strip().upper()
+        if not ticker:
+            raise ValueError("Ticker required.")
+        if start > end:
+            raise ValueError("Start date must be <= end date.")
+
+        with session_scope() as session:
+            stmt = (
+                select(
+                    PriceDaily.date,
+                    PriceDaily.open,
+                    PriceDaily.high,
+                    PriceDaily.low,
+                    PriceDaily.close,
+                    PriceDaily.volume,
+                )
+                .where(
+                    PriceDaily.ticker == ticker,
+                    PriceDaily.date >= start,
+                    PriceDaily.date <= end,
+                )
+                .order_by(PriceDaily.date.asc())
+            )
+            rows = session.execute(stmt).all()
+
+        columns = ["date", "open", "high", "low", "close", "volume"]
+        if not rows:
+            return pd.DataFrame(columns=columns)
+
+        return pd.DataFrame(rows, columns=columns)
 
     def refresh_watchlist_async(self, *, actor_id: uuid.UUID | None = None) -> uuid.UUID:
         with session_scope() as session:
