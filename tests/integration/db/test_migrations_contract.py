@@ -16,9 +16,11 @@ def test_migration_revision_chain() -> None:
     base = Path("src/quantsentinel/infra/db/migrations/versions")
     m1 = _load_module(base / "0001_init_schema.py", "m0001")
     m2 = _load_module(base / "0002_add_notifications.py", "m0002")
+    m3 = _load_module(base / "0003_add_task_log.py", "m0003")
 
     assert m1.revision == "0001_init_schema"
     assert m2.down_revision == m1.revision
+    assert m3.down_revision == m2.revision
 
 
 def test_notification_migration_upgrade_downgrade_calls(monkeypatch) -> None:
@@ -51,3 +53,25 @@ def test_notification_migration_upgrade_downgrade_calls(monkeypatch) -> None:
     assert ("create_index", "ix_notifications_status") in calls
     assert ("drop_index", "ix_notifications_status") in calls
     assert ("drop_table", "notifications") in calls
+
+
+def test_task_log_migration_upgrade_downgrade_calls(monkeypatch) -> None:
+    base = Path("src/quantsentinel/infra/db/migrations/versions")
+    m3 = _load_module(base / "0003_add_task_log.py", "m0003b")
+
+    calls: list[tuple[str, str, str]] = []
+
+    def _add_column(table_name, column):
+        calls.append(("add_column", table_name, column.name))
+
+    def _drop_column(table_name, column_name):
+        calls.append(("drop_column", table_name, column_name))
+
+    monkeypatch.setattr(m3.op, "add_column", _add_column)
+    monkeypatch.setattr(m3.op, "drop_column", _drop_column)
+
+    m3.upgrade()
+    m3.downgrade()
+
+    assert ("add_column", "tasks", "log") in calls
+    assert ("drop_column", "tasks", "log") in calls

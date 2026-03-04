@@ -35,6 +35,8 @@ def render() -> None:
         _render_rules_section(t)
         st.divider()
         _render_events_section(t)
+        st.divider()
+        _render_recent_tasks_section(t)
 
     def _render_drawer() -> None:
         Drawer.render(title=t("Details"))
@@ -220,8 +222,11 @@ def _render_events_section(t) -> None:
 def _run_monitor_cycle(t) -> None:
     task_svc = TaskService()
     try:
-        task_id = task_svc.create_task(task_type="alert_monitor_cycle")
-        task_svc.start_task(task_id)
+        task_svc.queue(
+            task_type="alert_monitor_cycle",
+            actor_id=auth().user_id,
+            celery_signature="quantsentinel.infra.tasks.tasks_monitor.run_alert_monitor",
+        )
         render_success_state(t("Monitor cycle started."))
     except Exception as e:
         render_error_state(
@@ -230,6 +235,25 @@ def _run_monitor_cycle(t) -> None:
             logs_label=t("View Logs"),
             key_prefix="monitor_cycle_error",
         )
+
+
+def _render_recent_tasks_section(t) -> None:
+    st.header(t("Recent Tasks"))
+    rows = TaskService().list_recent(limit=10)
+    if not rows:
+        render_empty_state(t("No tasks to display."))
+        return
+
+    for row in rows:
+        with st.container(border=True):
+            st.write(f"🧩 **{t('Type')}:** {row.task_type}")
+            st.write(f"📌 **{t('Status')}:** {row.status.value} | ⏱️ **{t('Progress')}:** {row.progress}%")
+            if row.detail:
+                st.caption(f"{t('Detail')}: {row.detail}")
+            if row.log:
+                lines = [ln for ln in row.log.splitlines() if ln.strip()]
+                if lines:
+                    st.caption(f"{t('Log Summary')}: {lines[-1]}")
 
 
 def _ack_event(event_id: uuid.UUID, t) -> None:

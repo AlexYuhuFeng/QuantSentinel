@@ -14,8 +14,11 @@ from quantsentinel.infra.tasks.lifecycle import TaskLifecycle
 )
 def export_snapshot(self, task_id: str | None = None, *, scope: str = "all") -> None:
     def _worker(report):
+        if not scope.strip():
+            raise ValueError("scope is required")
         report(25, "collecting snapshot payload")
         report(70, f"serializing scope={scope}")
         report(95, "storing export artifact")
+        return f"snapshot exported: scope={scope}"
 
-    TaskLifecycle(task_id).run(worker=_worker, success_detail=f"snapshot exported: scope={scope}")
+    TaskLifecycle(task_id).run(worker=_worker)
