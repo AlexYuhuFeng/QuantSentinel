@@ -168,7 +168,7 @@ def render_header() -> None:
     a = auth()
     c = ctx()
 
-    left, mid, right = st.columns([1.2, 2.6, 1.2], vertical_alignment="center")
+    left, mid, right = st.columns([1.2, 2.6, 1.4], vertical_alignment="center")
     with left:
         st.markdown(f"### {t('QuantSentinel')}")
 
@@ -176,32 +176,34 @@ def render_header() -> None:
         ticker_label = c.ticker or "-"
         date_label = c.date_label or "-"
         workspace_label = c.workspace or "-"
-        st.caption(t("Ticker | Date | Workspace"))
-        st.write(f"{ticker_label} | {date_label} | {workspace_label}")
+        st.write(f"**{ticker_label} | {date_label} | {workspace_label}**")
 
     with right:
-        render_notifications_control(t)
-
-        lang = st.selectbox(
-            t("Language switch"),
-            options=["en", "zh_CN"],
-            index=0 if a.language == "en" else 1,
-            label_visibility="collapsed",
-            key="qs_lang_select",
-        )
-        if lang != a.language:
-            set_language(lang)
-            # Persist preference for logged-in users
-            if a.user_id is not None:
-                with suppress(Exception):
-                    auth_svc.set_default_language(actor_id=a.user_id, user_id=a.user_id, language=lang)
-            st.rerun()
-
-        with st.popover(f"👤 {t('User menu')}", use_container_width=False):
-            st.write(f"**{a.username or ''}**")
-            if st.button(t("Sign out")):
-                clear_auth()
+        notif_col, lang_col, user_col = st.columns([1, 1, 1], vertical_alignment="center")
+        with notif_col:
+            render_notifications_control(t)
+        with lang_col:
+            lang = st.selectbox(
+                t("Language switch"),
+                options=["en", "zh_CN"],
+                index=0 if a.language == "en" else 1,
+                label_visibility="collapsed",
+                key="qs_lang_select",
+            )
+            if lang != a.language:
+                set_language(lang)
+                # Persist preference for logged-in users
+                if a.user_id is not None:
+                    with suppress(Exception):
+                        auth_svc.set_default_language(actor_id=a.user_id, user_id=a.user_id, language=lang)
                 st.rerun()
+
+        with user_col:
+            with st.popover(f"👤 {t('User menu')}", use_container_width=False):
+                st.write(f"**{a.username or ''}**")
+                if st.button(t("Sign out")):
+                    clear_auth()
+                    st.rerun()
 
 
 def render_sidebar() -> str:
@@ -218,6 +220,7 @@ def render_sidebar() -> str:
             ("Monitor", t("Monitor")),
             ("Research", t("Research Lab")),
             ("Strategy", t("Strategy Lab")),
+            ("Help", t("Help")),
         ]
         if a.role == UserRole.ADMIN:
             pages.append(("Admin", t("Admin")))
@@ -265,6 +268,8 @@ def render_page(page_key: str) -> None:
     elif page_key == "Admin":
         set_workspace("Market")
         admin.render()
+    elif page_key == "Help":
+        help_page.render()
     else:
         help_page.render()
 
