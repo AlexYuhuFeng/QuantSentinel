@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import streamlit as st
 
+from quantsentinel.app.ui.components import empty, error, success
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
-from quantsentinel.app.ui.components import render_empty_state, render_error_state, render_success_state
 from quantsentinel.app.ui.state import auth, open_drawer
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.market_service import MarketService
@@ -42,9 +42,9 @@ def render() -> None:
         if refresh:
             try:
                 svc.refresh_watchlist_async()
-                render_success_state(t("Refresh queued."))
+                success(t("Refresh queued."))
             except Exception as e:
-                render_error_state(f"{t('Failed to queue refresh')}: {e}", key_prefix="market_refresh_error")
+                error(f"{t('Failed to queue refresh')}: {e}", key_prefix="market_refresh_error")
         if export:
             st.info(t("Snapshot export is not yet wired."))
 
@@ -69,7 +69,7 @@ def render() -> None:
             except Exception:
                 watch = []
             if not watch:
-                render_empty_state(t("Your watchlist is empty. Add a ticker above."))
+                empty(t("Your watchlist is empty. Add a ticker above."))
             else:
                 for item in watch:
                     row = st.container(border=True)
@@ -98,7 +98,7 @@ def render() -> None:
             except Exception:
                 anomalies = []
             if not anomalies:
-                render_empty_state(t("No anomalies detected (or data not loaded)."))
+                empty(t("No anomalies detected (or data not loaded)."))
             else:
                 for anomaly in anomalies:
                     box = st.container(border=True)

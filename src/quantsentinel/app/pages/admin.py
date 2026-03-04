@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import streamlit as st
 
-from quantsentinel.app.ui.components import render_empty_state
+from quantsentinel.app.ui.components import empty
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
-from quantsentinel.app.ui.state import auth
+from quantsentinel.app.ui.state import auth, open_drawer
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.infra.db.models import UserRole
 
@@ -27,10 +27,16 @@ def render() -> None:
     def _render_main() -> None:
         if state["section"] == t("Users"):
             st.subheader(t("Manage Users"))
-            render_empty_state(t("User management is available in service-backed deployments."))
+            if st.button(t("Details"), key="admin_users_details"):
+                open_drawer("admin_users", {"section": "users"})
+                st.rerun()
+            empty(t("User management is available in service-backed deployments."))
         else:
             st.subheader(t("Audit Logs"))
-            render_empty_state(t("Audit logs are available in service-backed deployments."))
+            if st.button(t("Details"), key="admin_audit_details"):
+                open_drawer("admin_audit", {"section": "audit_logs"})
+                st.rerun()
+            empty(t("Audit logs are available in service-backed deployments."))
 
     def _render_drawer() -> None:
         Drawer.render(title=t("Details"))

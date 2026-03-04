@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import uuid
-
 import streamlit as st
 
-from quantsentinel.app.ui.components import render_empty_state, render_error_state, render_success_state
+from quantsentinel.app.ui.components import empty, error, success
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
-from quantsentinel.app.ui.state import auth, push_toast
+from quantsentinel.app.ui.state import auth, open_drawer, push_toast
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.infra.db.models import AlertEventStatus, AlertRule
 from quantsentinel.infra.db.repos.alerts_repo import AlertRuleCreate
@@ -49,7 +47,7 @@ def _render_rule_wizard(t) -> None:
 
     if step == 1:
         name = st.text_input(t("Rule Name"), key="wizard_name")
-        rule_type = st.selectbox(t("Rule Type"), options=sorted(AlertsService.SUPPORTED_RULE_TYPES), key="wizard_type")
+        st.selectbox(t("Rule Type"), options=sorted(AlertsService.SUPPORTED_RULE_TYPES), key="wizard_type")
         if st.button(t("Next"), key="wizard_step1_next"):
             if not name.strip():
                 st.error(t("Rule name is required."))
@@ -58,10 +56,10 @@ def _render_rule_wizard(t) -> None:
                 st.rerun()
 
     elif step == 2:
-        scope_tickers = st.text_input(t("Scope Tickers (comma separated)"), key="wizard_scope")
-        dedup_minutes = st.number_input(t("Dedup Minutes"), min_value=1, value=60, key="wizard_dedup")
-        silence_minutes = st.number_input(t("Silence Minutes"), min_value=0, value=0, key="wizard_silence")
-        aggregation_key = st.text_input(t("Aggregation Key (optional)"), key="wizard_aggregation")
+        st.text_input(t("Scope Tickers (comma separated)"), key="wizard_scope")
+        st.number_input(t("Dedup Minutes"), min_value=1, value=60, key="wizard_dedup")
+        st.number_input(t("Silence Minutes"), min_value=0, value=0, key="wizard_silence")
+        st.text_input(t("Aggregation Key (optional)"), key="wizard_aggregation")
         col_prev, col_next = st.columns(2)
         with col_prev:
             if st.button(t("Back"), key="wizard_step2_prev"):
@@ -161,7 +159,7 @@ def _render_rules_section(t) -> None:
     alerts_svc = AlertsService()
     rules = alerts_svc.list_enabled_rules()
     if not rules:
-        render_empty_state(t("No alert rules defined."))
+        empty(t("No alert rules defined."))
         return
     for rule in rules:
         with st.expander(f"{rule.name} — {rule.rule_type}"):
@@ -175,7 +173,7 @@ def _render_single_rule(rule: AlertRule, t) -> None:
     st.write(f"⚙️ **{t('Params')}:** {rule.params_json}")
     st.write(f"📍 **{t('Scope')}:** {rule.scope_json}")
     st.write(f"🚦 **{t('Enabled')}:** {rule.enabled}")
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     with col1:
         if st.button(t("Disable") if rule.enabled else t("Enable"), key=f"toggle_rule_{rule.id}"):
             alerts_svc.set_rule_enabled(rule_id=rule.id, enabled=not rule.enabled, actor_id=auth().user_id)
@@ -191,6 +189,10 @@ def _render_single_rule(rule: AlertRule, t) -> None:
             alerts_svc.delete_rule(rule_id=rule.id, actor_id=auth().user_id)
             push_toast("warning", t("Rule deleted."))
             st.rerun()
+    with col4:
+        if st.button(t("Details"), key=f"rule_details_{rule.id}"):
+            open_drawer("alert_rule", {"id": str(rule.id), "name": rule.name, "type": rule.rule_type, "params": rule.params_json, "scope": rule.scope_json})
+            st.rerun()
 
 
 def _render_events_section(t) -> None:
@@ -198,22 +200,25 @@ def _render_events_section(t) -> None:
     alerts_svc = AlertsService()
     events = alerts_svc.list_recent_events(limit=100)
     if not events:
-        render_empty_state(t("No alert events to display."))
+        empty(t("No alert events to display."))
         return
     for ev in events:
         ts = ev.event_ts.strftime("%Y-%m-%d %H:%M:%S")
         with st.container():
             st.write(f"📅 **{t('Time')}:** {ts}  |  📌 **{t('Ticker')}:** {ev.ticker}  |  🧠 **{t('Rule')}:** {ev.rule.name}")
             st.write(f"💬 **{t('Message')}:** {ev.message}")
-            if ev.status == AlertEventStatus.NEW:
-                col1, col2 = st.columns([1, 1])
-                with col1:
-                    if st.button(t("Acknowledge"), key=f"ack_{ev.id}"):
-                        _ack_event(ev.id, t)
-                with col2:
-                    if st.button(t("Notify"), key=f"notify_{ev.id}"):
-                        _notify_event(ev, t)
-            else:
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col1:
+                if ev.status == AlertEventStatus.NEW and st.button(t("Acknowledge"), key=f"ack_{ev.id}"):
+                    _ack_event(ev.id, t)
+            with col2:
+                if ev.status == AlertEventStatus.NEW and st.button(t("Notify"), key=f"notify_{ev.id}"):
+                    _notify_event(ev, t)
+            with col3:
+                if st.button(t("Details"), key=f"ev_details_{ev.id}"):
+                    open_drawer("alert_event", {"id": str(ev.id), "ticker": ev.ticker, "message": ev.message, "status": ev.status.value, "rule": ev.rule.name})
+                    st.rerun()
+            if ev.status != AlertEventStatus.NEW:
                 st.caption(f"{t('Status')}: {ev.status.value}")
 
 
@@ -222,9 +227,9 @@ def _run_monitor_cycle(t) -> None:
     try:
         task_id = task_svc.create_task(task_type="alert_monitor_cycle")
         task_svc.start_task(task_id)
-        render_success_state(t("Monitor cycle started."))
+        success(t("Monitor cycle started."))
     except Exception as e:
-        render_error_state(
+        error(
             f"{t('Failed to start monitor')}: {e}",
             retry_label=t("Retry"),
             logs_label=t("View Logs"),
@@ -232,14 +237,14 @@ def _run_monitor_cycle(t) -> None:
         )
 
 
-def _ack_event(event_id: uuid.UUID, t) -> None:
+def _ack_event(event_id, t) -> None:
     try:
         svc = AlertsService()
         svc.ack_event(event_id=event_id, actor_id=auth().user_id)
         push_toast("success", t("Alert acknowledged."))
         st.rerun()
     except Exception as e:
-        render_error_state(
+        error(
             f"{t('Failed to acknowledge')}: {e}",
             retry_label=t("Retry"),
             logs_label=t("View Logs"),
@@ -266,9 +271,9 @@ def _notify_event(ev: object, t) -> None:
             related_entity_type="alert_event",
             related_entity_id=str(ev.id),
         )
-        render_success_state(t("Notification queued."))
+        success(t("Notification queued."))
     except Exception as e:
-        render_error_state(
+        error(
             f"{t('Failed to notify')}: {e}",
             retry_label=t("Retry"),
             logs_label=t("View Logs"),
