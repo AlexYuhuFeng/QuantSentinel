@@ -516,3 +516,24 @@ msgstr "尚未注册快捷键。"
 
 msgid "No matching commands."
 msgstr "没有匹配的命令。"
+
+msgid "Go to Market workspace"
+msgstr "跳转到市场工作区"
+
+msgid "Go to Explore workspace"
+msgstr "跳转到探索工作区"
+
+msgid "Go to Research workspace"
+msgstr "跳转到研究工作区"
+
+msgid "Go to Strategy workspace"
+msgstr "跳转到策略工作区"
+
+msgid "Focus ticker search"
+msgstr "聚焦到代码搜索框"
+
+msgid "Open shortcuts help"
+msgstr "打开快捷键帮助"
+
+msgid "Open command palette"
+msgstr "打开命令面板"

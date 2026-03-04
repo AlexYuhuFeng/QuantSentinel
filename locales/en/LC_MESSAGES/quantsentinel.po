@@ -270,3 +270,24 @@ msgstr "No shortcuts registered."
 
 msgid "No matching commands."
 msgstr "No matching commands."
+
+msgid "Go to Market workspace"
+msgstr "Go to Market workspace"
+
+msgid "Go to Explore workspace"
+msgstr "Go to Explore workspace"
+
+msgid "Go to Research workspace"
+msgstr "Go to Research workspace"
+
+msgid "Go to Strategy workspace"
+msgstr "Go to Strategy workspace"
+
+msgid "Focus ticker search"
+msgstr "Focus ticker search"
+
+msgid "Open shortcuts help"
+msgstr "Open shortcuts help"
+
+msgid "Open command palette"
+msgstr "Open command palette"
