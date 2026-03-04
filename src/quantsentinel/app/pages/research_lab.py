@@ -4,6 +4,7 @@ from datetime import date
 
 import streamlit as st
 
+from quantsentinel.app.ui.components import render_empty_state, render_error_state, render_success_state
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
 from quantsentinel.app.ui.state import app_state, auth, push_toast
@@ -17,6 +18,9 @@ def render() -> None:
     state = app_state()
     svc_research = ResearchService()
     svc_task = TaskService()
+
+    def _view_logs() -> None:
+        push_toast("info", t("Opening logs is not yet wired."))
 
     def _render_toolbar() -> None:
         st.markdown(f"## {t('Research Lab')}")
@@ -37,7 +41,13 @@ def render() -> None:
         start_date = state.get("research_start")
         end_date = state.get("research_end")
         if ticker and (start_date is None or end_date is None or start_date > end_date):
-            st.error(t("Invalid date range"))
+            render_error_state(
+                t("Invalid date range"),
+                on_view_logs=_view_logs,
+                retry_label=t("Retry"),
+                logs_label=t("View Logs"),
+                key_prefix="research_date_error",
+            )
             return
 
         st.subheader(t("Research Configuration"))
@@ -47,7 +57,7 @@ def render() -> None:
 
         if st.button(t("Run Backtest")):
             if not ticker:
-                st.warning(t("Please enter a ticker"))
+                render_empty_state(t("Please enter a ticker"))
             else:
                 try:
                     task_id = svc_task.create_task(task_type="research_backtest")
@@ -61,14 +71,20 @@ def render() -> None:
                             "params": param_inputs,
                         },
                     )
-                    push_toast("success", t("Backtest queued"))
+                    render_success_state(t("Backtest queued"))
                 except Exception as e:
-                    push_toast("error", f"{t('Failed to start backtest')}: {e}")
+                    render_error_state(
+                        f"{t('Failed to start backtest')}: {e}",
+                        on_view_logs=_view_logs,
+                        retry_label=t("Retry"),
+                        logs_label=t("View Logs"),
+                        key_prefix="research_backtest_error",
+                    )
 
         st.subheader(t("Recent Research Results"))
         results = svc_research.get_recent_results(limit=10)
         if not results:
-            st.info(t("No research results available"))
+            render_empty_state(t("No research results available"))
             return
         for result in results:
             st.write(result)

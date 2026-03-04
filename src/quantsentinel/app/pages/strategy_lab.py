@@ -6,9 +6,10 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
+from quantsentinel.app.ui.components import render_empty_state, render_error_state, render_success_state
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
-from quantsentinel.app.ui.state import app_state, auth, push_toast
+from quantsentinel.app.ui.state import app_state, auth
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.strategy_service import StrategyService
 from quantsentinel.services.task_service import TaskService
@@ -32,7 +33,12 @@ def render() -> None:
 
     def _render_main() -> None:
         if state["strategy_start"] > state["strategy_end"]:
-            st.error(t("Start date must be before end date"))
+            render_error_state(
+                t("Start date must be before end date"),
+                retry_label=t("Retry"),
+                logs_label=t("View Logs"),
+                key_prefix="strategy_date_error",
+            )
             return
         families = svc_strategy.available_families()
         family = st.selectbox(t("Strategy Family"), families)
@@ -50,7 +56,7 @@ def render() -> None:
         st.header(t("Recent Strategy Results"))
         results = svc_strategy.get_recent_results(limit=20)
         if not results:
-            st.info(t("No strategy results available"))
+            render_empty_state(t("No strategy results available"))
             return
         for r in results:
             st.markdown(f"### {r.family} — {r.ticker}")
@@ -64,7 +70,7 @@ def render() -> None:
 
 def _run_backtest(t, svc_task: TaskService, ticker: str, start: date, end: date, family: str, params: dict[str, Any]) -> None:
     if not ticker:
-        st.warning(t("Please enter a ticker"))
+        render_empty_state(t("Please enter a ticker"))
         return
     try:
         svc_task.create_task(
@@ -78,9 +84,14 @@ def _run_backtest(t, svc_task: TaskService, ticker: str, start: date, end: date,
                 "params_json": params,
             },
         )
-        push_toast("success", t("Backtest queued"))
+        render_success_state(t("Backtest queued"))
     except Exception as e:
-        push_toast("error", f"{t('Failed to queue backtest')}: {e}")
+        render_error_state(
+            f"{t('Failed to queue backtest')}: {e}",
+            retry_label=t("Retry"),
+            logs_label=t("View Logs"),
+            key_prefix="strategy_backtest_error",
+        )
 
 
 def _run_parameter_sweep(t, svc_task: TaskService, ticker: str, start: date, end: date, family: str, base_params: dict[str, Any]) -> None:
@@ -97,6 +108,11 @@ def _run_parameter_sweep(t, svc_task: TaskService, ticker: str, start: date, end
                     "params_json": combo,
                 },
             )
-        push_toast("success", t("Parameter sweep queued"))
+        render_success_state(t("Parameter sweep queued"))
     except Exception as e:
-        push_toast("error", f"{t('Failed to queue parameter sweep')}: {e}")
+        render_error_state(
+            f"{t('Failed to queue parameter sweep')}: {e}",
+            retry_label=t("Retry"),
+            logs_label=t("View Logs"),
+            key_prefix="strategy_sweep_error",
+        )

@@ -4,6 +4,7 @@ import uuid
 
 import streamlit as st
 
+from quantsentinel.app.ui.components import render_empty_state, render_error_state, render_success_state
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
 from quantsentinel.app.ui.state import auth, push_toast
@@ -160,7 +161,7 @@ def _render_rules_section(t) -> None:
     alerts_svc = AlertsService()
     rules = alerts_svc.list_enabled_rules()
     if not rules:
-        st.info(t("No alert rules defined."))
+        render_empty_state(t("No alert rules defined."))
         return
     for rule in rules:
         with st.expander(f"{rule.name} — {rule.rule_type}"):
@@ -197,7 +198,7 @@ def _render_events_section(t) -> None:
     alerts_svc = AlertsService()
     events = alerts_svc.list_recent_events(limit=100)
     if not events:
-        st.info(t("No alert events to display."))
+        render_empty_state(t("No alert events to display."))
         return
     for ev in events:
         ts = ev.event_ts.strftime("%Y-%m-%d %H:%M:%S")
@@ -221,9 +222,14 @@ def _run_monitor_cycle(t) -> None:
     try:
         task_id = task_svc.create_task(task_type="alert_monitor_cycle")
         task_svc.start_task(task_id)
-        push_toast("success", t("Monitor cycle started."))
+        render_success_state(t("Monitor cycle started."))
     except Exception as e:
-        push_toast("error", f"{t('Failed to start monitor')}: {e}")
+        render_error_state(
+            f"{t('Failed to start monitor')}: {e}",
+            retry_label=t("Retry"),
+            logs_label=t("View Logs"),
+            key_prefix="monitor_cycle_error",
+        )
 
 
 def _ack_event(event_id: uuid.UUID, t) -> None:
@@ -233,7 +239,12 @@ def _ack_event(event_id: uuid.UUID, t) -> None:
         push_toast("success", t("Alert acknowledged."))
         st.rerun()
     except Exception as e:
-        push_toast("error", f"{t('Failed to acknowledge')}: {e}")
+        render_error_state(
+            f"{t('Failed to acknowledge')}: {e}",
+            retry_label=t("Retry"),
+            logs_label=t("View Logs"),
+            key_prefix="monitor_ack_error",
+        )
 
 
 def _notify_event(ev: object, t) -> None:
@@ -255,6 +266,11 @@ def _notify_event(ev: object, t) -> None:
             related_entity_type="alert_event",
             related_entity_id=str(ev.id),
         )
-        push_toast("success", t("Notification queued."))
+        render_success_state(t("Notification queued."))
     except Exception as e:
-        push_toast("error", f"{t('Failed to notify')}: {e}")
+        render_error_state(
+            f"{t('Failed to notify')}: {e}",
+            retry_label=t("Retry"),
+            logs_label=t("View Logs"),
+            key_prefix="monitor_notify_error",
+        )
