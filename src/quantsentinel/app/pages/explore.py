@@ -5,14 +5,14 @@ from datetime import date
 import streamlit as st
 
 from quantsentinel.app.ui.components import (
-    render_empty_state,
-    render_error_state,
-    render_loading_state,
-    render_success_state,
+    empty,
+    error,
+    loading,
+    success,
 )
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
-from quantsentinel.app.ui.state import app_state, auth, push_toast
+from quantsentinel.app.ui.state import app_state, auth, open_drawer, push_toast
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.explore_service import ExploreService
 from quantsentinel.services.market_service import MarketService
@@ -43,8 +43,9 @@ def render() -> None:
         push_toast("info", t("Opening logs is not yet wired."))
 
     def _render_toolbar() -> None:
-        st.markdown(f"## {t('Explore Market Data')}")
-        c1, c2, c3 = st.columns([2, 1, 1])
+        c0, c1, c2, c3, c4 = st.columns([1.6, 2.4, 1.2, 1.2, 1.0], vertical_alignment="center")
+        with c0:
+            st.markdown(f"## {t('Explore')}")
         with c1:
             ticker = st.text_input(t("Enter ticker"), value=state.get("explore_ticker", ""))
             state["explore_ticker"] = ticker.upper().strip()
@@ -54,14 +55,15 @@ def render() -> None:
             )
         with c3:
             state["explore_end"] = st.date_input(t("End date"), value=state.get("explore_end", date.today()))
-        if st.button(t("Refresh"), use_container_width=True):
-            _refresh_data()
+        with c4:
+            if st.button(t("Refresh"), use_container_width=True):
+                _refresh_data()
 
     def _render_main() -> None:
         df = state.get("explore_data")
         if df is None:
             if state.get("explore_last_error"):
-                render_error_state(
+                error(
                     state["explore_last_error"],
                     on_retry=_refresh_data,
                     on_view_logs=_view_logs,
@@ -70,13 +72,13 @@ def render() -> None:
                     key_prefix="explore_load_error",
                 )
                 return
-            render_empty_state(t("Enter a ticker and click Refresh to load data"))
+            empty(t("Enter a ticker and click Refresh to load data"))
             return
         if df.empty:
-            render_empty_state(t("No price data found for the given ticker/date range"))
+            empty(t("No price data found for the given ticker/date range"))
             return
 
-        render_loading_state(t("Rendering explore charts..."))
+        loading(t("Rendering explore charts..."))
 
         st.subheader(t("Price Chart"))
         st.line_chart(df.set_index("date")[["close", "open", "high", "low"]])
@@ -89,10 +91,22 @@ def render() -> None:
         for _, series in indicators.items():
             st.line_chart(series)
 
+        if st.button(t("View data summary"), key="explore_open_summary"):
+            open_drawer(
+                "explore_summary",
+                {
+                    "ticker": state.get("explore_ticker"),
+                    "rows": int(len(df)),
+                    "start": str(state.get("explore_start")),
+                    "end": str(state.get("explore_end")),
+                },
+            )
+            st.rerun()
+
         if st.checkbox(t("Show raw data")):
             st.dataframe(df)
 
-        render_success_state(t("Explore page loaded"))
+        success(t("Explore page loaded"))
 
     def _render_drawer() -> None:
         Drawer.render(title=t("Details"))

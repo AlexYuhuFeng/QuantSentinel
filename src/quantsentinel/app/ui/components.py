@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import streamlit as st
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from quantsentinel.app.ui.state import auth, ui
 from quantsentinel.i18n.gettext import get_translator
@@ -39,25 +42,25 @@ def render_shortcuts_help_dialog() -> None:
     _dialog()
 
 
-def render_loading_state(message: str) -> None:
+def loading(message: str) -> None:
     with st.container(border=True):
         st.caption("⏳")
         st.write(message)
 
 
-def render_empty_state(message: str) -> None:
+def empty(message: str) -> None:
     with st.container(border=True):
         st.caption("📭")
         st.write(message)
 
 
-def render_success_state(message: str) -> None:
+def success(message: str) -> None:
     with st.container(border=True):
         st.caption("✅")
         st.write(message)
 
 
-def render_error_state(
+def error(
     message: str,
     *,
     on_retry: Callable[[], None] | None = None,
@@ -78,3 +81,35 @@ def render_error_state(
             logs_clicked = st.button(logs_label, key=f"{key_prefix}_logs", use_container_width=True)
             if logs_clicked and on_view_logs is not None:
                 on_view_logs()
+
+
+# Backward-compatible aliases.
+def render_loading_state(message: str) -> None:
+    loading(message)
+
+
+def render_empty_state(message: str) -> None:
+    empty(message)
+
+
+def render_success_state(message: str) -> None:
+    success(message)
+
+
+def render_error_state(
+    message: str,
+    *,
+    on_retry: Callable[[], None] | None = None,
+    on_view_logs: Callable[[], None] | None = None,
+    retry_label: str = "Retry",
+    logs_label: str = "View Logs",
+    key_prefix: str = "state_error",
+) -> None:
+    error(
+        message,
+        on_retry=on_retry,
+        on_view_logs=on_view_logs,
+        retry_label=retry_label,
+        logs_label=logs_label,
+        key_prefix=key_prefix,
+    )

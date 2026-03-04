@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import streamlit as st
 
-from quantsentinel.app.ui.components import render_success_state
+from quantsentinel.app.ui.components import success
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
-from quantsentinel.app.ui.state import auth
+from quantsentinel.app.ui.state import auth, open_drawer
 from quantsentinel.i18n.gettext import get_translator
 
 
@@ -17,6 +17,9 @@ def render() -> None:
         st.caption(t("Workspace guides and FAQs"))
 
     def _render_main() -> None:
+        if st.button(t("Details"), key="help_details"):
+            open_drawer("help", {"topic": "workspace_guides"})
+            st.rerun()
         st.header(t("Getting Started"))
         st.markdown(
             f"""
@@ -35,7 +38,7 @@ def render() -> None:
 - {t('Remember to refresh data before running research or alerts.')}
 """
         )
-        render_success_state(t("Help center loaded"))
+        success(t("Help center loaded"))
 
     def _render_drawer() -> None:
         Drawer.render(title=t("Details"))

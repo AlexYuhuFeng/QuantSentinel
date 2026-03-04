@@ -6,10 +6,10 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-from quantsentinel.app.ui.components import render_empty_state, render_error_state, render_success_state
+from quantsentinel.app.ui.components import empty, error, success
 from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
-from quantsentinel.app.ui.state import app_state, auth
+from quantsentinel.app.ui.state import app_state, auth, open_drawer
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.services.strategy_service import StrategyService
 from quantsentinel.services.task_service import TaskService
@@ -33,7 +33,7 @@ def render() -> None:
 
     def _render_main() -> None:
         if state["strategy_start"] > state["strategy_end"]:
-            render_error_state(
+            error(
                 t("Start date must be before end date"),
                 retry_label=t("Retry"),
                 logs_label=t("View Logs"),
@@ -56,10 +56,16 @@ def render() -> None:
         st.header(t("Recent Strategy Results"))
         results = svc_strategy.get_recent_results(limit=20)
         if not results:
-            render_empty_state(t("No strategy results available"))
+            empty(t("No strategy results available"))
             return
-        for r in results:
-            st.markdown(f"### {r.family} — {r.ticker}")
+        for idx, r in enumerate(results):
+            c1, c2 = st.columns([5, 1], vertical_alignment="center")
+            with c1:
+                st.markdown(f"### {r.family} — {r.ticker}")
+            with c2:
+                if st.button(t("Details"), key=f"strategy_result_{idx}"):
+                    open_drawer("strategy_result", {"family": r.family, "ticker": r.ticker, "metrics": r.metrics_json})
+                    st.rerun()
             st.dataframe(pd.DataFrame(r.metrics_json))
 
     def _render_drawer() -> None:
@@ -70,7 +76,7 @@ def render() -> None:
 
 def _run_backtest(t, svc_task: TaskService, ticker: str, start: date, end: date, family: str, params: dict[str, Any]) -> None:
     if not ticker:
-        render_empty_state(t("Please enter a ticker"))
+        empty(t("Please enter a ticker"))
         return
     try:
         svc_task.create_task(
@@ -84,9 +90,9 @@ def _run_backtest(t, svc_task: TaskService, ticker: str, start: date, end: date,
                 "params_json": params,
             },
         )
-        render_success_state(t("Backtest queued"))
+        success(t("Backtest queued"))
     except Exception as e:
-        render_error_state(
+        error(
             f"{t('Failed to queue backtest')}: {e}",
             retry_label=t("Retry"),
             logs_label=t("View Logs"),
@@ -108,9 +114,9 @@ def _run_parameter_sweep(t, svc_task: TaskService, ticker: str, start: date, end
                     "params_json": combo,
                 },
             )
-        render_success_state(t("Parameter sweep queued"))
+        success(t("Parameter sweep queued"))
     except Exception as e:
-        render_error_state(
+        error(
             f"{t('Failed to queue parameter sweep')}: {e}",
             retry_label=t("Retry"),
             logs_label=t("View Logs"),
