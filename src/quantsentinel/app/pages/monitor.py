@@ -9,6 +9,7 @@ from quantsentinel.app.ui.layout import render_workspace_shell
 from quantsentinel.app.ui.state import auth, push_toast
 from quantsentinel.i18n.gettext import get_translator
 from quantsentinel.infra.db.models import AlertEventStatus, AlertRule
+from quantsentinel.infra.db.repos.alerts_repo import AlertRuleCreate
 from quantsentinel.services.alerts_service import AlertsService
 from quantsentinel.services.notification_service import NotificationPayload, NotificationService
 from quantsentinel.services.task_service import TaskService
@@ -28,6 +29,8 @@ def render() -> None:
                 st.rerun()
 
     def _render_main() -> None:
+        _render_rule_wizard(t)
+        st.divider()
         _render_rules_section(t)
         st.divider()
         _render_events_section(t)
@@ -36,6 +39,120 @@ def render() -> None:
         Drawer.render(title=t("Details"))
 
     render_workspace_shell(render_toolbar=_render_toolbar, render_main=_render_main, render_drawer=_render_drawer)
+
+
+def _render_rule_wizard(t) -> None:
+    st.subheader(t("Create Alert Rule Wizard"))
+    step = st.session_state.get("monitor_rule_wizard_step", 1)
+    st.caption(f"{t('Step')} {step}/3")
+
+    if step == 1:
+        name = st.text_input(t("Rule Name"), key="wizard_name")
+        rule_type = st.selectbox(t("Rule Type"), options=sorted(AlertsService.SUPPORTED_RULE_TYPES), key="wizard_type")
+        if st.button(t("Next"), key="wizard_step1_next"):
+            if not name.strip():
+                st.error(t("Rule name is required."))
+            else:
+                st.session_state["monitor_rule_wizard_step"] = 2
+                st.rerun()
+
+    elif step == 2:
+        scope_tickers = st.text_input(t("Scope Tickers (comma separated)"), key="wizard_scope")
+        dedup_minutes = st.number_input(t("Dedup Minutes"), min_value=1, value=60, key="wizard_dedup")
+        silence_minutes = st.number_input(t("Silence Minutes"), min_value=0, value=0, key="wizard_silence")
+        aggregation_key = st.text_input(t("Aggregation Key (optional)"), key="wizard_aggregation")
+        col_prev, col_next = st.columns(2)
+        with col_prev:
+            if st.button(t("Back"), key="wizard_step2_prev"):
+                st.session_state["monitor_rule_wizard_step"] = 1
+                st.rerun()
+        with col_next:
+            if st.button(t("Next"), key="wizard_step2_next"):
+                st.session_state["monitor_rule_wizard_step"] = 3
+                st.rerun()
+
+    else:
+        _render_params_by_type(t)
+        col_prev, col_submit = st.columns(2)
+        with col_prev:
+            if st.button(t("Back"), key="wizard_step3_prev"):
+                st.session_state["monitor_rule_wizard_step"] = 2
+                st.rerun()
+        with col_submit:
+            if st.button(t("Create Rule"), key="wizard_submit"):
+                _submit_wizard_rule(t)
+
+
+def _render_params_by_type(t) -> None:
+    rule_type = st.session_state.get("wizard_type", "threshold")
+    st.markdown(f"**{t('Rule Parameters')}**")
+    if rule_type == "threshold":
+        st.selectbox(t("Operator"), ["<", ">"], key="wizard_operator")
+        st.number_input(t("Threshold Value"), value=0.0, key="wizard_threshold_value")
+    elif rule_type == "z_score":
+        st.number_input(t("Lookback"), min_value=5, value=20, key="wizard_lookback")
+        st.number_input(t("Z Threshold"), min_value=0.1, value=2.0, key="wizard_z_threshold")
+    elif rule_type == "volatility":
+        st.number_input(t("Lookback"), min_value=5, value=20, key="wizard_lookback")
+        st.number_input(t("Vol Threshold"), min_value=0.001, value=0.03, key="wizard_vol_threshold")
+    elif rule_type == "staleness":
+        st.number_input(t("Max Days"), min_value=1, value=7, key="wizard_max_days")
+    elif rule_type == "missing_data":
+        st.number_input(t("Lookback Days"), min_value=1, value=30, key="wizard_lookback_days")
+        st.number_input(t("Minimum Points"), min_value=1, value=25, key="wizard_min_points")
+    elif rule_type == "correlation_break":
+        st.text_input(t("Benchmark Ticker"), key="wizard_benchmark")
+        st.number_input(t("Lookback"), min_value=5, value=20, key="wizard_lookback")
+        st.number_input(t("Min Correlation"), min_value=-1.0, max_value=1.0, value=0.2, key="wizard_min_corr")
+    elif rule_type == "custom_expression":
+        st.text_input(t("Expression"), key="wizard_expression", help="Variables: close, ret, vol, z, ma20, ma60")
+
+
+def _build_params_from_wizard() -> dict:
+    rule_type = st.session_state.get("wizard_type", "threshold")
+    params: dict = {"dedup_minutes": int(st.session_state.get("wizard_dedup", 60))}
+    if st.session_state.get("wizard_aggregation"):
+        params["aggregation_key"] = st.session_state.get("wizard_aggregation")
+    if rule_type == "threshold":
+        params.update({"operator": st.session_state.get("wizard_operator", "<"), "value": float(st.session_state.get("wizard_threshold_value", 0.0))})
+    elif rule_type == "z_score":
+        params.update({"lookback": int(st.session_state.get("wizard_lookback", 20)), "threshold": float(st.session_state.get("wizard_z_threshold", 2.0))})
+    elif rule_type == "volatility":
+        params.update({"lookback": int(st.session_state.get("wizard_lookback", 20)), "threshold": float(st.session_state.get("wizard_vol_threshold", 0.03))})
+    elif rule_type == "staleness":
+        params.update({"max_days": int(st.session_state.get("wizard_max_days", 7))})
+    elif rule_type == "missing_data":
+        params.update({"lookback_days": int(st.session_state.get("wizard_lookback_days", 30)), "min_points": int(st.session_state.get("wizard_min_points", 25))})
+    elif rule_type == "correlation_break":
+        params.update({"benchmark_ticker": st.session_state.get("wizard_benchmark", ""), "lookback": int(st.session_state.get("wizard_lookback", 20)), "min_corr": float(st.session_state.get("wizard_min_corr", 0.2))})
+    elif rule_type == "custom_expression":
+        params.update({"expression": st.session_state.get("wizard_expression", "")})
+    return params
+
+
+def _submit_wizard_rule(t) -> None:
+    svc = AlertsService()
+    try:
+        tickers = [x.strip() for x in st.session_state.get("wizard_scope", "").split(",") if x.strip()]
+        payload = AlertRuleCreate(
+            name=st.session_state.get("wizard_name", ""),
+            rule_type=st.session_state.get("wizard_type", "threshold"),
+            scope_json={"tickers": tickers} if tickers else {},
+            params_json=_build_params_from_wizard(),
+            enabled=True,
+            created_by=auth().user_id,
+        )
+        svc.create_rule(actor_id=auth().user_id, payload=payload)
+        silence_minutes = int(st.session_state.get("wizard_silence", 0))
+        if silence_minutes > 0:
+            rules = svc.list_enabled_rules()
+            if rules:
+                svc.set_rule_silenced(rule_id=rules[0].id, duration_minutes=silence_minutes, actor_id=auth().user_id)
+        st.session_state["monitor_rule_wizard_step"] = 1
+        push_toast("success", t("Rule created."))
+        st.rerun()
+    except Exception as e:
+        st.error(f"{t('Failed to create rule')}: {e}")
 
 
 def _render_rules_section(t) -> None:
@@ -60,17 +177,17 @@ def _render_single_rule(rule: AlertRule, t) -> None:
     col1, col2, col3 = st.columns([1, 1, 1])
     with col1:
         if st.button(t("Disable") if rule.enabled else t("Enable"), key=f"toggle_rule_{rule.id}"):
-            alerts_svc.set_rule_enabled(rule_id=rule.id, enabled=not rule.enabled)
+            alerts_svc.set_rule_enabled(rule_id=rule.id, enabled=not rule.enabled, actor_id=auth().user_id)
             push_toast("success", t("Rule updated."))
             st.rerun()
     with col2:
         if st.button(t("Silence Rule"), key=f"silence_rule_{rule.id}"):
-            alerts_svc.set_rule_silenced(rule_id=rule.id, duration_minutes=60)
+            alerts_svc.set_rule_silenced(rule_id=rule.id, duration_minutes=60, actor_id=auth().user_id)
             push_toast("info", t("Rule silenced"))
             st.rerun()
     with col3:
         if st.button(t("Delete Rule"), key=f"del_rule_{rule.id}"):
-            alerts_svc.delete_rule(rule_id=rule.id)
+            alerts_svc.delete_rule(rule_id=rule.id, actor_id=auth().user_id)
             push_toast("warning", t("Rule deleted."))
             st.rerun()
 
@@ -112,7 +229,7 @@ def _run_monitor_cycle(t) -> None:
 def _ack_event(event_id: uuid.UUID, t) -> None:
     try:
         svc = AlertsService()
-        svc.ack_event(event_id=event_id)
+        svc.ack_event(event_id=event_id, actor_id=auth().user_id)
         push_toast("success", t("Alert acknowledged."))
         st.rerun()
     except Exception as e:
