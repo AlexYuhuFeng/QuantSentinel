@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from types import SimpleNamespace
 
 from quantsentinel.services.alerts_service import AlertsService

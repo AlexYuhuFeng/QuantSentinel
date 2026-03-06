@@ -51,6 +51,9 @@ class _FakeStreamlit:
     def dataframe(self, _df) -> None:
         return None
 
+    def caption(self, _text: str) -> None:
+        return None
+
 
 def test_explore_page_data_flow_renders_key_charts(monkeypatch) -> None:
     fake_st = _FakeStreamlit()
@@ -67,6 +70,7 @@ def test_explore_page_data_flow_renders_key_charts(monkeypatch) -> None:
         "write",
         "checkbox",
         "dataframe",
+        "caption",
     ]:
         setattr(st_mod, attr, getattr(fake_st, attr))
     monkeypatch.setitem(sys.modules, "streamlit", st_mod)
@@ -95,9 +99,13 @@ def test_explore_page_data_flow_renders_key_charts(monkeypatch) -> None:
         "explore_end": pd.Timestamp("2024-01-31").date(),
     }
     state_mod.app_state = lambda: state
-    state_mod.auth = lambda: SimpleNamespace(language="en")
+    state_mod.auth = lambda: SimpleNamespace(language="en", role="x")
     state_mod.push_toast = lambda *_args, **_kwargs: None
     monkeypatch.setitem(sys.modules, "quantsentinel.app.ui.state", state_mod)
+
+    rbac_mod = ModuleType("quantsentinel.services.rbac_service")
+    rbac_mod.RBACService = SimpleNamespace(can_mutate_workspace=lambda *_args, **_kwargs: True)
+    monkeypatch.setitem(sys.modules, "quantsentinel.services.rbac_service", rbac_mod)
 
     i18n_mod = ModuleType("quantsentinel.i18n.gettext")
     i18n_mod.get_translator = lambda _lang: (lambda s: s)

@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
-from quantsentinel.domain.alerts.governance import resolve_aggregation_key, should_dedup, should_silence
+from quantsentinel.domain.alerts.governance import (
+    resolve_aggregation_key,
+    should_dedup,
+    should_silence,
+)
 from quantsentinel.domain.alerts.models import GovernancePolicy
 
 
 def test_should_silence_when_window_active() -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     policy = GovernancePolicy(silenced_until=now + timedelta(minutes=10))
     assert should_silence(policy=policy, now=now) is True
 

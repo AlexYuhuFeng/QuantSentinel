@@ -15,10 +15,7 @@ def render_table(
     """
     Renders a paginated table.
     """
-    if isinstance(data, list):
-        df = pd.DataFrame(data)
-    else:
-        df = data
+    df = pd.DataFrame(data) if isinstance(data, list) else data
 
     t = get_translator(auth().language)
 

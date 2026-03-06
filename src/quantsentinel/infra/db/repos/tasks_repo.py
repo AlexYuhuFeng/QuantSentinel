@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
@@ -77,7 +77,7 @@ class TasksRepo:
 
         values = {"progress": progress}
         if updated_at is None:
-            updated_at = datetime.now(timezone.utc)
+            updated_at = datetime.now(UTC)
         values["updated_at"] = updated_at
         if detail is not None:
             values["detail"] = detail

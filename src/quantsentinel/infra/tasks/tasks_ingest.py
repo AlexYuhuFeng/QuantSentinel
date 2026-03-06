@@ -11,8 +11,9 @@ Goals:
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timedelta, timezone
-from typing import Any, Iterable
+from collections.abc import Iterable
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
 from celery import shared_task
 from sqlalchemy import select
@@ -23,7 +24,7 @@ from quantsentinel.infra.db.repos.prices_repo import PricesRepo
 
 
 def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _today_utc_date() -> date:

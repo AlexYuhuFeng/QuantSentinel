@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from quantsentinel.common.security import hash_password, verify_password
 from quantsentinel.infra.db.engine import session_scope
@@ -62,7 +62,7 @@ class AuthService:
 
         This is intended for initial bootstrap in a fresh DB.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         with session_scope() as session:
             users = UsersRepo(session)
@@ -112,7 +112,7 @@ class AuthService:
         Returns:
             LoginResult
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         with session_scope() as session:
             users = UsersRepo(session)
@@ -218,7 +218,7 @@ class AuthService:
 
         RBAC should be enforced by caller (UI/service orchestration).
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         with session_scope() as session:
             users = UsersRepo(session)
@@ -245,7 +245,7 @@ class AuthService:
         """
         Update user's default language preference.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         with session_scope() as session:
             users = UsersRepo(session)

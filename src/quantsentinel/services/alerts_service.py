@@ -3,11 +3,15 @@ from __future__ import annotations
 import statistics
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
+from typing import Any, ClassVar
 
 from quantsentinel.domain.alerts.expression import evaluate
-from quantsentinel.domain.alerts.governance import resolve_aggregation_key, should_dedup, should_silence
+from quantsentinel.domain.alerts.governance import (
+    resolve_aggregation_key,
+    should_dedup,
+    should_silence,
+)
 from quantsentinel.domain.alerts.models import GovernancePolicy
 from quantsentinel.infra.db.engine import session_scope
 from quantsentinel.infra.db.models import AlertEventStatus, AlertRule, UserRole
@@ -16,12 +20,12 @@ from quantsentinel.infra.db.repos.audit_repo import AuditEntryCreate, AuditRepo
 from quantsentinel.infra.db.repos.events_repo import EventsRepo
 from quantsentinel.infra.db.repos.instruments_repo import InstrumentsRepo
 from quantsentinel.infra.db.repos.prices_repo import PricesRepo
-from quantsentinel.services.task_service import TaskService
 from quantsentinel.services.rbac_service import AuditActionType, RBACService
+from quantsentinel.services.task_service import TaskService
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass(frozen=True)
@@ -43,7 +47,7 @@ class MonitorCycleResult:
 
 
 class AlertsService:
-    SUPPORTED_RULE_TYPES = {
+    SUPPORTED_RULE_TYPES: ClassVar[set[str]] = {
         "threshold",
         "z_score",
         "volatility",
