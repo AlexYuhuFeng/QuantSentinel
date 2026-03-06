@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -32,7 +32,7 @@ class _FakeScope:
 
 
 def test_run_monitor_cycle_applies_silence_dedup_and_aggregation(monkeypatch) -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     silenced_rule = _Rule(
         id=uuid4(),
         name="silenced",

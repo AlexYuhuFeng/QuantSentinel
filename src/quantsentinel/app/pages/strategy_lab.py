@@ -15,9 +15,9 @@ from quantsentinel.app.ui.drawer import Drawer
 from quantsentinel.app.ui.layout import render_workspace_shell
 from quantsentinel.app.ui.state import app_state, auth
 from quantsentinel.i18n.gettext import get_translator
+from quantsentinel.services.rbac_service import RBACService
 from quantsentinel.services.strategy_service import StrategyService
 from quantsentinel.services.task_service import TaskService
-from quantsentinel.services.rbac_service import RBACService
 
 
 def render() -> None:

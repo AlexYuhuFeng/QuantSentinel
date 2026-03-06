@@ -17,8 +17,8 @@ from quantsentinel.infra.db.models import AlertEventStatus, AlertRule
 from quantsentinel.infra.db.repos.alerts_repo import AlertRuleCreate
 from quantsentinel.services.alerts_service import AlertsService
 from quantsentinel.services.notification_service import NotificationPayload, NotificationService
-from quantsentinel.services.task_service import TaskService
 from quantsentinel.services.rbac_service import RBACService
+from quantsentinel.services.task_service import TaskService
 
 if TYPE_CHECKING:
     import uuid

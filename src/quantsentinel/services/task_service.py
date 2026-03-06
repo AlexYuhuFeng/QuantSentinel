@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from quantsentinel.infra.db.engine import session_scope
@@ -22,7 +22,7 @@ from quantsentinel.services.rbac_service import AuditActionType, RBACService
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass(frozen=True)

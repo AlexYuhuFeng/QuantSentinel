@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from quantsentinel.infra.db.engine import session_scope
@@ -59,7 +59,7 @@ class LayoutService:
         name: str,
         layout_json: dict[str, Any],
     ) -> LayoutActionResult:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         normalized = migrate_layout(layout_json)
         with session_scope() as session:
             repo = LayoutsRepo(session)
@@ -109,7 +109,7 @@ class LayoutService:
         new_name: str,
         layout_json: dict[str, Any] | None,
     ) -> LayoutActionResult:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with session_scope() as session:
             repo = LayoutsRepo(session)
             audit = AuditRepo(session)
@@ -148,7 +148,7 @@ class LayoutService:
             return self._to_result(created)
 
     def set_default(self, *, actor_id: uuid.UUID, workspace: LayoutWorkspace, layout_id: uuid.UUID) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with session_scope() as session:
             repo = LayoutsRepo(session)
             audit = AuditRepo(session)
@@ -170,7 +170,7 @@ class LayoutService:
             )
 
     def delete(self, *, actor_id: uuid.UUID, workspace: LayoutWorkspace, layout_id: uuid.UUID) -> None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with session_scope() as session:
             repo = LayoutsRepo(session)
             audit = AuditRepo(session)
@@ -198,7 +198,7 @@ class LayoutService:
             )
 
     def reset_to_default(self, *, actor_id: uuid.UUID, workspace: LayoutWorkspace) -> dict[str, Any]:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         with session_scope() as session:
             repo = LayoutsRepo(session)
             audit = AuditRepo(session)

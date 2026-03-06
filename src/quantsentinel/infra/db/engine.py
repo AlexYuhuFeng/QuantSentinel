@@ -10,8 +10,9 @@ Goals:
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Generator
+from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine

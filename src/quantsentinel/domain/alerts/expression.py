@@ -46,7 +46,7 @@ class ExpressionValidationError(ValueError):
 
 def _validate_ast(node: ast.AST) -> None:
     for current in ast.walk(node):
-        if isinstance(current, (ast.Import, ast.ImportFrom, ast.Attribute, ast.Subscript, ast.Lambda)):
+        if isinstance(current, ast.Import | ast.ImportFrom | ast.Attribute | ast.Subscript | ast.Lambda):
             raise ExpressionValidationError(f"Forbidden syntax: {type(current).__name__}")
 
         if type(current) not in _ALLOWED_NODES:

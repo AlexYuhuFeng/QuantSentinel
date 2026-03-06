@@ -9,12 +9,11 @@ Responsibilities:
 
 from __future__ import annotations
 
+import statistics
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Iterable
-
-import statistics
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session

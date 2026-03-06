@@ -5,7 +5,13 @@ from collections.abc import Mapping
 import streamlit as st
 import streamlit.components.v1 as components
 
-from quantsentinel.app.ui.state import auth, pop_shortcut_event, queue_shortcut_event, set_workspace, ui
+from quantsentinel.app.ui.state import (
+    auth,
+    pop_shortcut_event,
+    queue_shortcut_event,
+    set_workspace,
+    ui,
+)
 from quantsentinel.i18n.gettext import get_translator
 
 SHORTCUTS: dict[str, str] = {

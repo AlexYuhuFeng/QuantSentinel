@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -39,7 +39,7 @@ def export_snapshot(
             raise ValueError("scope is required")
 
         report(20, "collecting snapshot context")
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         snapshot_context = _snapshot_context(
             workspace=workspace,
             ticker=ticker,

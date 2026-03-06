@@ -20,11 +20,11 @@ def flush_toasts() -> None:
         text = msg.get("message", "")
         # Map kind to icon emoji
         icon = {
-            "info": "ℹ️",
+            "info": "i",
             "success": "✅",
             "warning": "⚠️",
             "error": "❌",
-        }.get(kind, None)
+        }.get(kind)
         st.toast(text, icon=icon)
     u.toast_queue.clear()
     st.session_state["qs_ui"] = u

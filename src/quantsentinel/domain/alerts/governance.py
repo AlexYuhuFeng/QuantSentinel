@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from quantsentinel.domain.alerts.models import GovernancePolicy
 
@@ -11,7 +11,7 @@ def should_silence(*, policy: GovernancePolicy, now: datetime | None = None) -> 
     """Return True when rule is inside silence window."""
     if policy.silenced_until is None:
         return False
-    current = now or datetime.now(timezone.utc)
+    current = now or datetime.now(UTC)
     return policy.silenced_until > current
 
 

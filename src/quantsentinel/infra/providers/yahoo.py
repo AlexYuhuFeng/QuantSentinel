@@ -27,7 +27,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -54,7 +54,7 @@ class YahooProviderConfig:
 
 def _to_unix_seconds(d: date) -> int:
     # Interpret date as UTC midnight
-    dt = datetime(d.year, d.month, d.day, tzinfo=timezone.utc)
+    dt = datetime(d.year, d.month, d.day, tzinfo=UTC)
     return int(dt.timestamp())
 
 
@@ -63,7 +63,7 @@ def _decimal_or_none(x: Any) -> Decimal | None:
         return None
     try:
         # Yahoo sometimes returns NaN as None already; handle floats/ints/strings
-        if isinstance(x, (int, float)):
+        if isinstance(x, int | float):
             # Avoid Decimal(float) binary artifacts by converting via string
             return Decimal(str(x))
         return Decimal(str(x))
@@ -165,7 +165,7 @@ class YahooProvider:
             ts = timestamps[i]
             if ts is None:
                 continue
-            d = datetime.fromtimestamp(int(ts), tz=timezone.utc).date()
+            d = datetime.fromtimestamp(int(ts), tz=UTC).date()
 
             # Filter strictly to requested [start, end]
             if d < start or d > end:
@@ -173,7 +173,7 @@ class YahooProvider:
 
             o = opens[i] if i < len(opens) else None
             h = highs[i] if i < len(highs) else None
-            l = lows[i] if i < len(lows) else None
+            low_v = lows[i] if i < len(lows) else None
             c = closes[i] if i < len(closes) else None
             v = volumes[i] if i < len(volumes) else None
             ac = adj_closes[i] if i < len(adj_closes) else None
@@ -182,7 +182,7 @@ class YahooProvider:
                 "date": d,
                 "open": _decimal_or_none(o),
                 "high": _decimal_or_none(h),
-                "low": _decimal_or_none(l),
+                "low": _decimal_or_none(low_v),
                 "close": _decimal_or_none(c),
                 "adj_close": _decimal_or_none(ac),
                 "volume": _decimal_or_none(v),
